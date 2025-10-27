@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: b273f620561382c54b9608ccac0c38e4d21dd3b56ef8d8b28464be07c861cd83
+// SourceHash: ddd60518e4b410455e70d9f0ade54c7bdb0d2b3090fa8435c2e10b67f03277d7
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -50,18 +50,53 @@ mod _root
         }
     }
 }
+pub mod layout_asserts
+{
+    use super::{_root, _root::*};
+    const WGSL_BASE_TYPE_ASSERTS: () = {
+        assert!(std::mem::size_of::<glam::IVec2>() == 8);
+        assert!(std::mem::align_of::<glam::IVec2>() == 4);
+        assert!(std::mem::size_of::<glam::IVec3>() == 12);
+        assert!(std::mem::align_of::<glam::IVec3>() == 4);
+        assert!(std::mem::size_of::<glam::IVec4>() == 16);
+        assert!(std::mem::align_of::<glam::IVec4>() == 4);
+        assert!(std::mem::size_of::<glam::UVec2>() == 8);
+        assert!(std::mem::align_of::<glam::UVec2>() == 4);
+        assert!(std::mem::size_of::<glam::UVec3>() == 12);
+        assert!(std::mem::align_of::<glam::UVec3>() == 4);
+        assert!(std::mem::size_of::<glam::UVec4>() == 16);
+        assert!(std::mem::align_of::<glam::UVec4>() == 4);
+        assert!(std::mem::size_of::<glam::Vec2>() == 8);
+        assert!(std::mem::align_of::<glam::Vec2>() == 4);
+        assert!(std::mem::size_of::<glam::Vec3>() == 12);
+        assert!(std::mem::align_of::<glam::Vec3>() == 4);
+        assert!(std::mem::size_of::<glam::Vec4>() == 16);
+        assert!(std::mem::align_of::<glam::Vec4>() == 16);
+        assert!(std::mem::size_of::<glam::Mat2>() == 16);
+        assert!(std::mem::align_of::<glam::Mat2>() == 16);
+        assert!(std::mem::size_of::<glam::Mat3A>() == 48);
+        assert!(std::mem::align_of::<glam::Mat3A>() == 16);
+        assert!(std::mem::size_of::<glam::Mat4>() == 64);
+        assert!(std::mem::align_of::<glam::Mat4>() == 16);
+    };
+    const GLOBAL_BINDINGS_GLOBAL_UNIFORMS_ASSERTS: () = {
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, view) == 0);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, exp) == 48);
+        assert!(std::mem::size_of::<global_bindings::GlobalUniforms>() == 64);
+    };
+}
 pub mod global_bindings
 {
     use super::{_root, _root::*};
     #[repr(C)]
-    #[derive(Debug, PartialEq, Clone, Copy, encase :: ShaderType)]
+    #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct VertexInput
     {
-        pub position: nalgebra::SVector<f32, 2>
+        pub position: glam::Vec3
     }
     impl VertexInput
     {
-        pub const fn new(position: nalgebra::SVector<f32, 2>) -> Self
+        pub const fn new(position: glam::Vec3) -> Self
         {
             Self { position }
         }
@@ -69,7 +104,7 @@ pub mod global_bindings
     impl VertexInput
     {
         pub const VERTEX_ATTRIBUTES: [wgpu::VertexAttribute; 1] = [wgpu::VertexAttribute {
-            format: wgpu::VertexFormat::Float32x2,
+            format: wgpu::VertexFormat::Float32x3,
             offset: std::mem::offset_of!(Self, position) as u64,
             shader_location: 0
         }];
@@ -83,18 +118,46 @@ pub mod global_bindings
             }
         }
     }
-    #[repr(C)]
-    #[derive(Debug, PartialEq, Clone, Copy, encase :: ShaderType)]
+    #[repr(C, align(16))]
+    #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct GlobalUniforms
     {
-        pub view: nalgebra::SMatrix<f32, 3, 2>,
-        pub exp: nalgebra::SVector<f32, 2>
+        #[doc = "offset: 0, size: 48, type: `mat3x3<f32>`"]
+        pub view: glam::Mat3A,
+        #[doc = "offset: 48, size: 8, type: `vec2<f32>`"]
+        pub exp: glam::Vec2,
+        pub _pad_exp: [u8; 0x8]
     }
     impl GlobalUniforms
     {
-        pub const fn new(view: nalgebra::SMatrix<f32, 3, 2>, exp: nalgebra::SVector<f32, 2>) -> Self
+        pub const fn new(view: glam::Mat3A, exp: glam::Vec2) -> Self
         {
-            Self { view, exp }
+            Self { view, exp, _pad_exp: [0; 0x8] }
+        }
+    }
+    #[repr(C)]
+    #[derive(Debug, PartialEq, Clone, Copy)]
+    pub struct GlobalUniformsInit
+    {
+        pub view: glam::Mat3A,
+        pub exp: glam::Vec2
+    }
+    impl GlobalUniformsInit
+    {
+        pub fn build(&self) -> GlobalUniforms
+        {
+            GlobalUniforms {
+                view: self.view,
+                exp: self.exp,
+                _pad_exp: [0; 0x8]
+            }
+        }
+    }
+    impl From<GlobalUniformsInit> for GlobalUniforms
+    {
+        fn from(data: GlobalUniformsInit) -> Self
+        {
+            data.build()
         }
     }
     #[derive(Debug)]
@@ -173,13 +236,13 @@ pub mod global_bindings
         }
     }
 }
-pub mod layout_asserts
-{
-    use super::{_root, _root::*};
-}
 pub mod bytemuck_impls
 {
     use super::{_root, _root::*};
+    unsafe impl bytemuck::Zeroable for global_bindings::VertexInput {}
+    unsafe impl bytemuck::Pod for global_bindings::VertexInput {}
+    unsafe impl bytemuck::Zeroable for global_bindings::GlobalUniforms {}
+    unsafe impl bytemuck::Pod for global_bindings::GlobalUniforms {}
 }
 pub mod mandelbrot
 {
@@ -285,60 +348,57 @@ pub mod mandelbrot
     }
     pub const SHADER_STRING: &str = r#"
 struct VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
-    @location(0) position: vec2<f32>,
     @builtin(vertex_index) vertex_index: u32,
+    @location(0) position: vec3<f32>,
 }
 
 struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
-    view: mat2x3<f32>,
+    view: mat3x3<f32>,
     exp: vec2<f32>,
 }
 
 @group(0) @binding(0) 
 var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
 
-fn norm_sqr(x: vec2<f32>) -> f32 {
+fn norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x: vec2<f32>) -> f32 {
     return ((x.x * x.x) + (x.y * x.y));
 }
 
-fn arg(x_1: vec2<f32>) -> f32 {
-    return atan2(x_1.y, x_1.x);
-}
-
-fn clog(x_2: vec2<f32>) -> vec2<f32> {
-    let _e1 = norm_sqr(x_2);
-    let _e5 = arg(x_2);
-    return vec2<f32>((log(_e1) / 2f), _e5);
-}
-
-fn cis(rot: f32) -> vec2<f32> {
-    return vec2<f32>(cos(rot), sin(rot));
-}
-
-fn cexp(x_3: vec2<f32>) -> vec2<f32> {
-    let _e4 = cis(x_3.y);
-    return (exp(x_3.x) * _e4);
-}
-
-fn powc(x_4: vec2<f32>, y: vec2<f32>) -> vec2<f32> {
-    let _e1 = clog(x_4);
-    let _e4 = cexp((y * _e1));
-    return _e4;
-}
-
-fn norm(x_5: vec2<f32>) -> f32 {
-    let _e1 = norm_sqr(x_5);
+fn normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_1: vec2<f32>) -> f32 {
+    let _e1 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_1);
     return sqrt(_e1);
 }
 
-fn cmul(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32> {
-    return vec2<f32>(((lhs.x * rhs.x) - (lhs.y * rhs.y)), ((lhs.x * lhs.y) + (lhs.y * rhs.x)));
+fn argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_2: vec2<f32>) -> f32 {
+    return atan2(x_2.y, x_2.x);
+}
+
+fn clogX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3: vec2<f32>) -> vec2<f32> {
+    let _e1 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3);
+    let _e5 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3);
+    return vec2<f32>((log(_e1) / 2f), _e5);
+}
+
+fn cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(rot: f32) -> vec2<f32> {
+    return vec2<f32>(cos(rot), sin(rot));
+}
+
+fn cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4: vec2<f32>) -> vec2<f32> {
+    let _e4 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4.y);
+    return (exp(x_4.x) * _e4);
+}
+
+fn powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5: vec2<f32>, y: vec2<f32>) -> vec2<f32> {
+    let _e1 = clogX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5);
+    let _e4 = cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((y * _e1));
+    return _e4;
 }
 
 @vertex 
 fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin(position) vec4<f32> {
-    let _e6 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.view;
-    return vec4<f32>((vec3<f32>(in.position, 1f) * _e6), 0f, 1f);
+    let _e4 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.view;
+    let pos = (in.position * _e4);
+    return vec4<f32>(pos.x, pos.y, 0f, 1f);
 }
 
 @fragment 
@@ -351,7 +411,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     loop {
         let _e8 = i;
         let _e11 = z;
-        let _e12 = norm_sqr(_e11);
+        let _e12 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e11);
         if ((_e8 < 1024i) && (_e12 < 4f)) {
         } else {
             break;
@@ -359,7 +419,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
         {
             let _e16 = z;
             let _e19 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e20 = powc(_e16, _e19);
+            let _e20 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e16, _e19);
             z = (_e20 + c);
         }
         continuing {
@@ -368,7 +428,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
         }
     }
     let _e25 = z;
-    let _e26 = norm(_e25);
+    let _e26 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e25);
     let _e28 = z.x;
     let _e31 = z.y;
     let color = vec2<f32>((_e26 + _e28), (_e26 + _e31));

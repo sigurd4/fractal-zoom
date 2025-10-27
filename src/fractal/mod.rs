@@ -19,12 +19,6 @@ pub use global_bindings::WgpuBindGroup0Entries;
 pub use global_bindings::WgpuBindGroup0EntriesParams;
 pub use global_bindings::VertexInput;
 
-unsafe impl Pod for GlobalUniforms {}
-unsafe impl Zeroable for GlobalUniforms {}
-
-unsafe impl Pod for VertexInput {}
-unsafe impl Zeroable for VertexInput {}
-
 pub trait Fractal
 {
     const LABEL: &str;

@@ -2,7 +2,6 @@ use core::ops::RangeInclusive;
 use std::sync::Arc;
 
 use linspace::Linspace;
-use nalgebra::ArrayStorage;
 use num_traits::{Float, NumAssignOps, float::FloatCore};
 use rand::distr::uniform::SampleUniform;
 use wgpu::{SurfaceConfiguration, util::DeviceExt};
@@ -142,12 +141,11 @@ where
             .step_by(PIXEL_SIZE)
             .flat_map(|j| (0..resolution.width)
                 .step_by(PIXEL_SIZE)
-                .map(move |i| VertexInput::new(nalgebra::Vector::from_array_storage(ArrayStorage([
-                    [
-                        i as f32 - resolution.width as f32,
-                        j as f32 - resolution.height as f32
-                    ]
-                ]))))
+                .map(move |i| VertexInput::new(glam::vec3(
+                    i as f32 - resolution.width as f32,
+                    j as f32 - resolution.height as f32,
+                    1.0
+                )))
             ).collect::<Vec<_>>();
 
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -312,12 +310,17 @@ where
 
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-        render_pass.draw(0..self.vertex_buffer.size() as u32, 0..1);
+        render_pass.draw(0..self.vertex_count(), 0..1);
 
         core::mem::drop(render_pass);
         self.queue.submit(core::iter::once(encoder.finish()));
 
         output.present();
         Ok(())
+    }
+
+    fn vertex_count(&self) -> u32
+    {
+        (self.vertex_buffer.size()/core::mem::size_of::<VertexInput>() as u64) as u32
     }
 }

@@ -1,4 +1,3 @@
-use nalgebra::ArrayStorage;
 use num_complex::Complex;
 use num_traits::{Float, NumAssignOps};
 use rand::{Rng, distr::{Distribution, Uniform, uniform::SampleUniform}};
@@ -57,7 +56,7 @@ where
         control.update_view(self);
     }
 
-    pub fn transform_3x3(&self) -> nalgebra::Matrix3x2<f32>
+    pub fn transform_3x3(&self) -> glam::Mat3A
     {
         let rot = Complex::from_polar(self.zoom.recip(), self.rot);
         let rot = Complex::new(
@@ -68,20 +67,20 @@ where
             self.center.re.to_f32().unwrap(),
             self.center.im.to_f32().unwrap()
         );
-        nalgebra::Matrix::from_array_storage(ArrayStorage([
-            [rot.re, -rot.im, -center.re],
-            [-rot.im, rot.re, -center.im]
-        ]))
+        glam::mat3a(
+            glam::vec3a(rot.re, -rot.im, -center.re),
+            glam::vec3a(-rot.im, rot.re, -center.im),
+            glam::vec3a(0.0, 0.0, 1.0)
+        )
     }
 
-    pub fn exp_vec2(&self) -> nalgebra::Vector2<f32>
+    pub fn exp_vec2(&self) -> glam::Vec2
     {
         let exp = Complex::new(
             self.exp.re.to_f32().unwrap(),
             self.exp.im.to_f32().unwrap()
         );
-        nalgebra::Vector::from_array_storage(ArrayStorage([
-            [exp.re, exp.im]
-        ]))
+
+        glam::vec2(exp.re, exp.im)
     }
 }

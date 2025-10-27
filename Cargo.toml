@@ -24,7 +24,7 @@ anyhow = "1.0.100"
 wgpu = { version = "27.0.1", features = ["naga-ir"] }
 bytemuck = { version = "1.24.0", features = ["derive"] }
 
-nalgebra = { version = "0.34.1", features = ["encase", "bytemuck"] }
+glam = { version = "0.30.8", features = ["std", "encase", "bytecheck"] }
 naga_oil = { version = "0.19.1" }
 encase = "0.12.0"
 

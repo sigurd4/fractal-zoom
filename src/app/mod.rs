@@ -1,16 +1,11 @@
 use core::ops::RangeInclusive;
-use std::sync::Arc;
 
 use linspace::Linspace;
-use moddef::moddef;
-use nalgebra::{ArrayStorage, Vector3};
-use num_complex::Complex;
 use num_traits::{Float, NumAssignOps, float::FloatCore};
 use rand::{distr::{uniform::SampleUniform}};
-use wgpu::{SurfaceConfiguration, TextureFormat, util::DeviceExt};
-use winit::{application::ApplicationHandler, dpi::PhysicalSize, event::{ElementState, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::Window};
+use winit::{application::ApplicationHandler, event::WindowEvent, window::Window};
 
-use crate::{PIXEL_SIZE, app::view::{View, ViewControl}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
+use crate::fractal::Fractal;
 
 moddef::moddef!(
     flat(pub) mod {

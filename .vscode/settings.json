@@ -1,0 +1,7 @@
+{
+    "wgsl-analyzer.diagnostics.nagaParsingErrors": false,
+    "wgsl-analyzer.imports.granularity.enforce": false,
+    "wgsl-analyzer.customImports": {
+        "global_bindings": "file://${workspaceFolder}/app/src/fractal/mandelbrot.wgsl",
+    }
+}

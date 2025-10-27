@@ -1,0 +1,37 @@
+[package]
+name = "fractal-zoom"
+version = "0.1.0"
+authors = ["Sigurd Sætherø Spangelo"]
+edition = "2024"
+license = "MIT"
+description = "Fractal zoom in the terminal"
+repository = "https://github.com/sigurd4/fractal-zoom"
+keywords = ["fractal", "visuals", "terminal"]
+categories = ["mathematics"]
+resolver = "3"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+moddef = "0.3.0"
+rand = "0.9.2"
+num-traits = "0.2.19"
+num-complex = "0.4.6"
+num-rational = "0.4.2"
+linspace = "0.2.3"
+anyhow = "1.0.100"
+
+wgpu = { version = "27.0.1", features = ["naga-ir"] }
+bytemuck = { version = "1.24.0", features = ["derive"] }
+
+nalgebra = { version = "0.34.1", features = ["encase", "bytemuck"] }
+naga_oil = { version = "0.19.1" }
+encase = "0.12.0"
+
+winit = "0.30.12"
+futures = "0.3.31"
+
+[build-dependencies]
+wgsl_bindgen = { version = "0.21.2", features = ["nalgebra"]}
+miette = { version = "7.6.0", features = ["fancy"] }
+anyhow = "1.0.100"

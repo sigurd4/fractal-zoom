@@ -1,0 +1,107 @@
+use num_complex::Complex;
+use num_traits::{Float, NumAssignOps};
+use winit::event::ElementState;
+
+use crate::{MOVE_SPEED, ROT_SPEED, ZOOM_MUL, app::view::View, f};
+
+use super::{MoveDirection, RotateDirection};
+
+#[derive(Debug, Clone, Copy)]
+pub struct ViewControl
+{
+    center_move: [Option<bool>; 2],
+    zoom_dir: bool,
+    rot_dir: Option<bool>
+}
+
+impl Default for ViewControl
+{
+    fn default() -> Self
+    {
+        Self {
+            center_move: [None; 2],
+            zoom_dir: true,
+            rot_dir: None
+        }
+    }
+}
+
+impl ViewControl
+{
+    pub fn move_center(&mut self, direction: MoveDirection, button_state: ElementState)
+    {
+        self.center_move[direction.axis() as usize] = match button_state
+        {
+            ElementState::Pressed => Some(direction.forward()),
+            ElementState::Released => None
+        }
+    }
+
+    pub fn zoom(&mut self, button_state: ElementState)
+    {
+        self.zoom_dir = match button_state
+        {
+            ElementState::Pressed => false,
+            ElementState::Released => true
+        }
+    }
+
+    pub fn rotate(&mut self, direction: RotateDirection, button_state: ElementState)
+    {
+        self.rot_dir = match button_state
+        {
+            ElementState::Pressed => Some(direction.forward()),
+            ElementState::Released => None
+        }
+    }
+
+    pub(super) fn update_view<F>(self, view: &mut View<F>)
+    where
+        F: Float + NumAssignOps
+    {
+        fn rot270<F>(z: Complex<F>) -> Complex<F>
+        where
+            F: Float
+        {
+            let Complex { re, im } = z;
+            Complex { re: im, im: -re }
+        }
+
+        fn ident<T>(z: T) -> T
+        {
+            z
+        }
+
+        for (dir, phase) in self.center_move.into_iter()
+            .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
+            .filter_map(|(center_move, phase)| center_move.map(|dir| (dir, phase)))
+        {
+            let move_center = phase(Complex::from_polar(f!(MOVE_SPEED)/view.zoom, view.rot));
+            match dir
+            {
+                true => view.center -= move_center,
+                false => view.center += move_center
+            }
+        }
+
+        match self.rot_dir
+        {
+            Some(dir) => {
+                let rot_speed = f!(ROT_SPEED);
+                match dir
+                {
+                    true => view.rot += rot_speed,
+                    false => view.rot -= rot_speed
+                }
+            }
+            _ => ()
+        }
+
+        let zoom_mul = f!(ZOOM_MUL);
+        match self.zoom_dir
+        {
+            true => view.zoom /= zoom_mul,
+            false => view.zoom *= zoom_mul
+        }
+    }
+}

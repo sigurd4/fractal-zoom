@@ -1,0 +1,80 @@
+use core::ops::RangeInclusive;
+use std::sync::Arc;
+
+use linspace::Linspace;
+use moddef::moddef;
+use nalgebra::{ArrayStorage, Vector3};
+use num_complex::Complex;
+use num_traits::{Float, NumAssignOps, float::FloatCore};
+use rand::{distr::{uniform::SampleUniform}};
+use wgpu::{SurfaceConfiguration, TextureFormat, util::DeviceExt};
+use winit::{application::ApplicationHandler, dpi::PhysicalSize, event::{ElementState, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::Window};
+
+use crate::{PIXEL_SIZE, app::view::{View, ViewControl}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
+
+moddef::moddef!(
+    flat(pub) mod {
+        view,
+        state
+    }
+);
+
+pub struct App<F, Z, G = fn() -> Z>
+where
+    F: Float,
+    G: FnMut() -> Z,
+    Z: Fractal
+{
+    fractal: G,
+    state: Option<State<F, Z>>
+}
+
+impl<F, Z, G> App<F, Z, G>
+where
+    F: Float,
+    G: FnMut() -> Z,
+    Z: Fractal
+{
+    pub const fn new(fractal: G) -> Self
+    {
+        Self {
+            fractal,
+            state: None
+        }
+    }
+}
+
+impl<F, Z, G> ApplicationHandler<()> for App<F, Z, G>
+where
+    F: Float + NumAssignOps + SampleUniform + FloatCore,
+    RangeInclusive<F>: Linspace<F>,
+    G: FnMut() -> Z,
+    Z: Fractal
+{
+    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop)
+    {
+        let window = event_loop.create_window(
+            Window::default_attributes()
+            .with_title("fractal-zoom")
+            .with_min_inner_size(winit::dpi::LogicalSize::new(640, 480))
+            .with_inner_size(winit::dpi::LogicalSize::new(1024, 768))
+        ).unwrap();
+
+        self.state = Some(futures::executor::block_on(async {
+            State::new(window, (self.fractal)()).await.unwrap()
+        }));
+    }
+    
+    fn window_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        window_id: winit::window::WindowId,
+        event: WindowEvent,
+    )
+    {
+        if let Some(state) = self.state.as_mut()
+        {
+            state.window_event(event_loop, window_id, event);
+        }
+    }
+}

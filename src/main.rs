@@ -1,4 +1,4 @@
-use core::f64::consts::TAU;
+use core::{f64::consts::TAU, ops::Range};
 
 use num_complex::Complex;
 
@@ -15,6 +15,7 @@ macro_rules! f {
     };
 }   
 use f as f;
+use num_traits::Num;
 use winit::{event_loop::{ActiveEventLoop, EventLoop}, window::Window};
 
 use crate::{app::{App, State}, fractal::Mandelbrot};
@@ -25,6 +26,14 @@ const MOVE_CENTER_SPEED: f64 = 10.0;
 const MOVE_EXP_SPEED: f64 = 10.0;
 const ZOOM_MUL: f64 = 0.995;
 const MAX_ITERATIONS: u32 = 64;
+
+fn clamp_rem<T>(x: T, range: Range<T>) -> T
+where
+    T: Num + Copy
+{
+    let span = range.end - range.start;
+    range.end - (span - (x - range.start) % span) % span
+}
 
 fn main() -> anyhow::Result<()>
 {

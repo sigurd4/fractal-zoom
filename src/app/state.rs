@@ -3,10 +3,10 @@ use std::sync::Arc;
 
 use linspace::Linspace;
 use num_complex::Complex;
-use num_traits::{Float, NumAssignOps, float::FloatCore};
+use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::distr::uniform::SampleUniform;
 use wgpu::{SurfaceConfiguration, util::DeviceExt};
-use winit::{dpi::{PhysicalSize, Size}, event::{ElementState, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
+use winit::{dpi::{PhysicalSize, Size}, event::{ElementState, MouseButton, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
 
 use crate::{app::{MoveDirection, RotateDirection, view::{View, ViewControl}}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
 
@@ -24,7 +24,6 @@ where
     config: SurfaceConfiguration,
     device: wgpu::Device,
     queue: wgpu::Queue,
-    size: winit::dpi::PhysicalSize<u32>,
     global_uniforms_buffer: wgpu::Buffer,
     global_bind_group: WgpuBindGroup0,
     vertex_buffer: wgpu::Buffer,
@@ -92,9 +91,9 @@ where
             [size.width as f32, size.height as f32]
         ]));*/
 
-        let view = View::default();
+        let view = View::new(size);
 
-        let global_uniforms = view.uniforms(size);
+        let global_uniforms = view.uniforms();
 
         let global_uniforms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Global uniforms buffer"),
@@ -115,7 +114,14 @@ where
         );
 
         let render_pipeline = Z::setup_render_pipeline(&device, *surface_format);
-        let vertex_buffer = Self::vertex_buffer(&device, size);
+        let vertices = core::array::from_fn::<_, 6, _>(|i| VertexInput { vertex_id: i as u32 });
+
+        println!("Creating vertex buffer.");
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Fractal Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
         Ok(Self {
             fractal,
@@ -126,23 +132,10 @@ where
             config,
             device,
             queue,
-            size,
             global_uniforms_buffer,
             global_bind_group,
             vertex_buffer,
             render_pipeline
-        })
-    }
-
-    fn vertex_buffer(device: &wgpu::Device, resolution: PhysicalSize<u32>) -> wgpu::Buffer
-    {
-        let vertices = core::array::from_fn::<_, 6, _>(|i| VertexInput { vertex_id: i as u32 });
-
-        println!("Creating vertex buffer.");
-        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Fractal Vertex Buffer"),
-            contents: bytemuck::cast_slice(&vertices),
-            usage: wgpu::BufferUsages::VERTEX,
         })
     }
     
@@ -152,23 +145,21 @@ where
     {
         if new_size.width > 0 && new_size.height > 0
         {
-            self.size = new_size;
+            self.view.resize(new_size);
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
-
-            self.vertex_buffer = Self::vertex_buffer(&self.device, new_size);
         }
     }
 
     pub fn update(&mut self)
     where
-        F: NumAssignOps
+        F: NumAssignOps + FloatConst
     {
         self.view.update(self.view_control);
 
         // Update global uniforms with new frame size immediately
-        let global_uniforms = self.view.uniforms(self.size);
+        let global_uniforms = self.view.uniforms();
 
         self.queue.write_buffer(
             &self.global_uniforms_buffer,
@@ -184,7 +175,7 @@ where
         event: WindowEvent,
     )
     where
-        F: NumAssignOps + SampleUniform + FloatCore,
+        F: NumAssignOps + SampleUniform + FloatCore + FloatConst,
         RangeInclusive<F>: Linspace<F>
     {
         if window_id != self.window.id()
@@ -238,7 +229,7 @@ where
                     PhysicalKey::Unidentified(_) => Action::Idle
                 }
                 {
-                    Action::Idle => (),
+                    Action::Idle => return,
                     Action::MoveCenter(direction) => self.view_control.move_center(direction, event.state),
                     Action::MoveExp(direction) => self.view_control.move_exp(direction, event.state),
                     Action::Rotate(direction) => self.view_control.rotate(direction, event.state),
@@ -248,7 +239,7 @@ where
                         Some(Fullscreen::Borderless(_) | Fullscreen::Exclusive(_)) => None,
                         None => Some(Fullscreen::Borderless(None))
                     }),
-                    Action::Reset => self.view = View::default()
+                    Action::Reset => self.view.reset()
                 }
 
                 self.window.request_redraw();
@@ -257,16 +248,23 @@ where
                 self.resize(physical_size);
                 self.window.request_redraw();
             },
-            /*WindowEvent::CursorMoved { position, .. } => {
-                state.update_mouse_position(position);
-                state.window.request_redraw();
-            }*/
+            WindowEvent::MouseInput { device_id: _, state, button } => {
+                match (button, state)
+                {
+                    (MouseButton::Left, ElementState::Pressed) => self.view.recenter(),
+                    _ => ()
+                }
+            },
+            WindowEvent::CursorMoved { position, device_id: _ } => {
+                self.view.update_mouse_pos(position);
+                self.window.request_redraw();
+            },
             WindowEvent::ScaleFactorChanged { .. } => {},
             WindowEvent::RedrawRequested => {
                 match self.render()
                 {
                     Ok(_) => {}
-                    Err(wgpu::SurfaceError::Lost) => self.resize(self.size),
+                    Err(wgpu::SurfaceError::Lost) => self.resize(self.view.win_size()),
                     Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
                     Err(e) => eprintln!("{e:?}"),
                 }
@@ -281,7 +279,7 @@ where
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError>
     where
-        F: NumAssignOps + SampleUniform + FloatCore,
+        F: NumAssignOps + SampleUniform + FloatCore + FloatConst,
         RangeInclusive<F>: Linspace<F>
     {
         self.update();

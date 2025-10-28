@@ -1,11 +1,12 @@
 use core::fmt::Display;
 
 use num_complex::Complex;
-use num_traits::{Float, NumAssignOps};
+use num_traits::{Float, FloatConst, NumAssignOps};
 use rand::{Rng, distr::{Distribution, Uniform, uniform::SampleUniform}};
-use winit::dpi::PhysicalSize;
+use wgpu::util::DeviceExt;
+use winit::dpi::{PhysicalPosition, PhysicalSize};
 
-use crate::{MAX_ITERATIONS, START_ZOOM, f, fractal::GlobalUniforms};
+use crate::{MAX_ITERATIONS, START_ZOOM, f, fractal::{GlobalUniforms, VertexInput}};
 
 moddef::moddef!(
     flat(pub) mod {
@@ -20,83 +21,93 @@ pub struct View<F>
 where
     F: Float
 {
+    mouse_pos: Option<Complex<F>>,
+    win_size: winit::dpi::PhysicalSize<u32>,
+    win_center: Complex<F>,
     center: Complex<F>,
     zoom: F,
     rot: F,
-    exp: Complex<F>
-}
-
-impl<F> Default for View<F>
-where
-    F: Float + SampleUniform + Display
-{
-    fn default() -> Self
-    {
-        Self::new(&mut rand::rng())
-    }
+    phi: Complex<F>
 }
 
 impl<F> View<F>
 where
     F: Float + Display
 {
-    fn new(rng: &mut impl Rng) -> Self
+    pub fn new(win_size: PhysicalSize<u32>) -> Self
     where
         F: SampleUniform
     {
         Self {
+            mouse_pos: None,
+            win_center: Complex { re: f!(0.0), im: f!(0.0) },
+            win_size,
             zoom: f!(START_ZOOM),
-            center: Complex::new(Uniform::new(f!(1.5), f!(2)).unwrap().sample(rng), F::zero()),
+            center: Complex::new(Uniform::new(f!(1.5), f!(2)).unwrap().sample(&mut rand::rng()), F::zero()),
             rot: F::zero(),
-            exp: Complex { re: f!(2.0), im: f!(0.0) }
+            phi: Complex { re: f!(2.0).atan(), im: f!(0.0).atan() }
         }
     }
 
-    pub fn uniforms(&self, size: PhysicalSize<u32>) -> GlobalUniforms
+    pub fn uniforms(&self) -> GlobalUniforms
     {
         GlobalUniforms {
             max_iterations: MAX_ITERATIONS,
             _pad_max_iterations: [0; _],
-            window_size: glam::uvec2(size.width, size.height),
+            window_size: glam::uvec2(self.win_size.width, self.win_size.height),
             center: glam::vec2(self.center.re.to_f32().unwrap(), self.center.im.to_f32().unwrap()),
             zoom: self.zoom.to_f32().unwrap(),
             rot: self.rot.to_f32().unwrap(),
-            exp: glam::vec2(self.exp.re.to_f32().unwrap(), self.exp.im.to_f32().unwrap())
+            exp: glam::vec2(self.phi.re.tan().to_f32().unwrap(), self.phi.im.tan().to_f32().unwrap())
         }
     }
 
     pub fn update(&mut self, control: ViewControl)
     where
-        F: NumAssignOps
+        F: NumAssignOps + FloatConst
     {
         control.update_view(self);
     }
-
-    pub fn transform_3x3(&self) -> glam::Mat3A
+    
+    pub fn update_mouse_pos(&mut self, mouse_pos: PhysicalPosition<f64>)
     {
-        let rot = Complex::from_polar(self.zoom.recip(), self.rot);
-        let rot = Complex::new(
-            rot.re.to_f32().unwrap(),
-            rot.im.to_f32().unwrap()
-        );
-        let center = Complex::new(
-            self.center.re.to_f32().unwrap(),
-            self.center.im.to_f32().unwrap()
-        );
-        glam::mat3a(
-            glam::vec3a(rot.re, -rot.im, -center.re),
-            glam::vec3a(-rot.im, rot.re, -center.im),
-            glam::vec3a(0.0, 0.0, 1.0)
-        )
+        if self.win_size == PhysicalSize::new(0, 0)
+        {
+            self.mouse_pos = None
+        }
+        else
+        {
+            let mouse_pos = Complex::new(
+                f!(mouse_pos.x - self.win_size.width as f64/2.0),
+                f!(mouse_pos.y - self.win_size.height as f64/2.0)
+            );
+            self.mouse_pos = Some(mouse_pos);
+            println!("Mouse pos: x = {}, y = {}", mouse_pos.re, mouse_pos.im);
+        }
     }
 
-    pub fn exp_vec2(&self) -> glam::Vec2
+    pub fn recenter(&mut self)
     {
-        let exp = Complex::new(
-            self.exp.re.to_f32().unwrap(),
-            self.exp.im.to_f32().unwrap()
-        );
+        if let Some(mouse_pos) = self.mouse_pos
+        {
+            self.win_center = mouse_pos
+        }
+    }
 
-        glam::vec2(exp.re, exp.im)
+    pub fn resize(&mut self, win_size: PhysicalSize<u32>)
+    {
+        self.win_size = win_size
+    }
+
+    pub fn reset(&mut self)
+    where
+        F: SampleUniform
+    {
+        *self = View::new(self.win_size)
+    }
+    
+    pub fn win_size(&self) -> PhysicalSize<u32>
+    {
+        self.win_size
     }
 }

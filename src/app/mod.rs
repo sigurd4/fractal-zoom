@@ -1,7 +1,7 @@
 use core::{fmt::Display, ops::RangeInclusive};
 
 use linspace::Linspace;
-use num_traits::{Float, NumAssignOps, float::FloatCore};
+use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::{distr::{uniform::SampleUniform}};
 use winit::{application::ApplicationHandler, event::WindowEvent, window::Window};
 
@@ -41,7 +41,7 @@ where
 
 impl<F, Z, G> ApplicationHandler<()> for App<F, Z, G>
 where
-    F: Float + NumAssignOps + SampleUniform + FloatCore + Display,
+    F: Float + NumAssignOps + SampleUniform + FloatCore + FloatConst + Display,
     RangeInclusive<F>: Linspace<F>,
     G: FnMut() -> Z,
     Z: Fractal

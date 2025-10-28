@@ -1,10 +1,10 @@
 use core::fmt::Display;
 
 use num_complex::Complex;
-use num_traits::{Float, NumAssignOps};
+use num_traits::{Float, FloatConst, NumAssignOps};
 use winit::event::ElementState;
 
-use crate::{MOVE_CENTER_SPEED, MOVE_EXP_SPEED, ROT_SPEED, ZOOM_MUL, app::view::View, f};
+use crate::{MOVE_CENTER_SPEED, MOVE_EXP_SPEED, ROT_SPEED, ZOOM_MUL, app::view::View, clamp_rem, f};
 
 use super::{MoveDirection, RotateDirection};
 
@@ -70,7 +70,7 @@ impl ViewControl
 
     pub(super) fn update_view<F>(self, view: &mut View<F>)
     where
-        F: Float + NumAssignOps + Display
+        F: Float + NumAssignOps + Display + FloatConst
     {
         fn rot270<F>(z: Complex<F>) -> Complex<F>
         where
@@ -104,9 +104,11 @@ impl ViewControl
             let exp_move = phase(Complex::from(f!(MOVE_EXP_SPEED)/view.zoom));
             match dir
             {
-                true => view.exp -= exp_move,
-                false => view.exp += exp_move
+                true => view.phi -= exp_move,
+                false => view.phi += exp_move
             }
+            view.phi.re = clamp_rem(view.phi.re, F::zero()..F::TAU());
+            view.phi.im = clamp_rem(view.phi.im, F::zero()..F::TAU())
         }
 
         match self.rot_dir
@@ -122,13 +124,15 @@ impl ViewControl
             _ => ()
         }
 
-        let zoom_mul = f!(ZOOM_MUL);
-        match self.zoom_dir
+        let zoom_mul = match self.zoom_dir
         {
-            true => view.zoom /= zoom_mul,
-            false => view.zoom *= zoom_mul
-        }
+            true => f!(ZOOM_MUL.recip()),
+            false => f!(ZOOM_MUL)
+        };
+        let new_zoom = view.zoom*zoom_mul;
+        view.center += view.win_center/new_zoom - view.win_center/view.zoom;
+        view.zoom *= zoom_mul;
 
-        println!("center = {}, rot = {}, zoom = {}", view.center, view.rot, view.zoom)
+        //println!("center = {}, rot = {}, zoom = {}", view.center, view.rot, view.zoom)
     }
 }

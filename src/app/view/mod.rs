@@ -1,25 +1,23 @@
-use core::fmt::Display;
-
 use num_complex::Complex;
-use num_traits::{Float, FloatConst, NumAssignOps};
-use rand::{Rng, distr::{Distribution, Uniform, uniform::SampleUniform}};
-use wgpu::util::DeviceExt;
+use num_traits::Float;
+use rand::distr::{Distribution, Uniform};
 use winit::dpi::{PhysicalPosition, PhysicalSize};
 
-use crate::{MAX_ITERATIONS, START_ZOOM, f, fractal::{GlobalUniforms, VertexInput}};
+use crate::{MAX_ITERATIONS, MyFloat, START_ZOOM, f, fractal::GlobalUniforms};
 
 moddef::moddef!(
     flat(pub) mod {
         view_control,
         move_direction,
         rotate_direction,
+        zoom_direction,
     }
 );
 
 #[derive(Debug, Clone, Copy)]
 pub struct View<F>
 where
-    F: Float
+    F: MyFloat
 {
     mouse_pos: Option<Complex<F>>,
     win_size: winit::dpi::PhysicalSize<u32>,
@@ -32,11 +30,9 @@ where
 
 impl<F> View<F>
 where
-    F: Float + Display
+    F: MyFloat
 {
     pub fn new(win_size: PhysicalSize<u32>) -> Self
-    where
-        F: SampleUniform
     {
         Self {
             mouse_pos: None,
@@ -45,7 +41,7 @@ where
             zoom: f!(START_ZOOM),
             center: Complex::new(Uniform::new(f!(1.5), f!(2)).unwrap().sample(&mut rand::rng()), F::zero()),
             rot: F::zero(),
-            phi: Complex { re: f!(2.0).atan(), im: f!(0.0).atan() }
+            phi: Complex { re: Float::atan(f!(2.0)), im: Float::atan(f!(0.0)) }
         }
     }
 
@@ -58,13 +54,11 @@ where
             center: glam::vec2(self.center.re.to_f32().unwrap(), self.center.im.to_f32().unwrap()),
             zoom: self.zoom.to_f32().unwrap(),
             rot: self.rot.to_f32().unwrap(),
-            exp: glam::vec2(self.phi.re.tan().to_f32().unwrap(), self.phi.im.tan().to_f32().unwrap())
+            exp: glam::vec2(Float::tan(self.phi.re).to_f32().unwrap(), Float::tan(self.phi.im).to_f32().unwrap())
         }
     }
 
-    pub fn update(&mut self, control: ViewControl)
-    where
-        F: NumAssignOps + FloatConst
+    pub fn update(&mut self, control: ViewControl<F>)
     {
         control.update_view(self);
     }
@@ -100,8 +94,6 @@ where
     }
 
     pub fn reset(&mut self)
-    where
-        F: SampleUniform
     {
         *self = View::new(self.win_size)
     }

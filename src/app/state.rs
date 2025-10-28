@@ -6,19 +6,19 @@ use num_complex::Complex;
 use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::distr::uniform::SampleUniform;
 use wgpu::{SurfaceConfiguration, util::DeviceExt};
-use winit::{dpi::{PhysicalSize, Size}, event::{ElementState, MouseButton, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
+use winit::{dpi::{PhysicalPosition, PhysicalSize, Size}, event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
 
-use crate::{app::{MoveDirection, RotateDirection, view::{View, ViewControl}}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
+use crate::{f, MyFloat, app::{MoveDirection, RotateDirection, ZoomDirection, view::{View, ViewControl}}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
 
 #[derive(Debug)]
 pub struct State<F, Z>
 where
-    F: Float,
+    F: MyFloat,
     Z: Fractal
 {
     fractal: Z,
     view: View<F>,
-    view_control: ViewControl,
+    view_control: ViewControl<F>,
     window: Arc<Window>,
     surface: wgpu::Surface<'static>,
     config: SurfaceConfiguration,
@@ -32,7 +32,7 @@ where
 
 impl<F, Z> State<F, Z>
 where
-    F: Float + Display,
+    F: MyFloat + Display,
     Z: Fractal
 {
     pub async fn new(window: Window, fractal: Z) -> anyhow::Result<Self>
@@ -140,8 +140,6 @@ where
     }
     
     pub fn resize(&mut self, new_size: PhysicalSize<u32>)
-    where
-        F: NumAssignOps
     {
         if new_size.width > 0 && new_size.height > 0
         {
@@ -153,8 +151,6 @@ where
     }
 
     pub fn update(&mut self)
-    where
-        F: NumAssignOps + FloatConst
     {
         self.view.update(self.view_control);
 
@@ -175,7 +171,6 @@ where
         event: WindowEvent,
     )
     where
-        F: NumAssignOps + SampleUniform + FloatCore + FloatConst,
         RangeInclusive<F>: Linspace<F>
     {
         if window_id != self.window.id()
@@ -198,7 +193,13 @@ where
                     MoveCenter(MoveDirection),
                     MoveExp(MoveDirection),
                     Rotate(RotateDirection),
-                    Zoom,
+                    
+                    AccelCenter(MoveDirection),
+                    AccelExp(MoveDirection),
+                    AccelZoom(ZoomDirection),
+                    AccelRotate(RotateDirection),
+
+                    Reverse,
                     Idle,
                     Fullscreen,
                     Reset
@@ -221,7 +222,7 @@ where
                         KeyCode::ArrowRight => Action::MoveCenter(MoveDirection::Right),
                         KeyCode::KeyQ => Action::Rotate(RotateDirection::Left),
                         KeyCode::KeyE => Action::Rotate(RotateDirection::Right),
-                        KeyCode::Space => Action::Zoom,
+                        KeyCode::Space => Action::Reverse,
                         KeyCode::KeyF if matches!(event.state, ElementState::Pressed) => Action::Fullscreen,
                         KeyCode::KeyR if matches!(event.state, ElementState::Pressed) => Action::Reset,
                         _ => Action::Idle
@@ -233,13 +234,22 @@ where
                     Action::MoveCenter(direction) => self.view_control.move_center(direction, event.state),
                     Action::MoveExp(direction) => self.view_control.move_exp(direction, event.state),
                     Action::Rotate(direction) => self.view_control.rotate(direction, event.state),
-                    Action::Zoom => self.view_control.zoom(event.state),
+
+                    Action::AccelCenter(direction) => self.view_control.accel_center(direction),
+                    Action::AccelExp(direction) => self.view_control.accel_phi(direction),
+                    Action::AccelRotate(direction) => self.view_control.accel_rot(direction),
+                    Action::AccelZoom(direction) => self.view_control.accel_zoom(direction, None, &self.view),
+
+                    Action::Reverse => self.view_control.reverse(event.state),
                     Action::Fullscreen => self.window.set_fullscreen(match self.window.fullscreen()
                     {
                         Some(Fullscreen::Borderless(_) | Fullscreen::Exclusive(_)) => None,
                         None => Some(Fullscreen::Borderless(None))
                     }),
-                    Action::Reset => self.view.reset()
+                    Action::Reset => {
+                        self.view.reset();
+                        self.view_control.reset();
+                    }
                 }
 
                 self.window.request_redraw();
@@ -253,6 +263,17 @@ where
                 {
                     (MouseButton::Left, ElementState::Pressed) => self.view.recenter(),
                     _ => ()
+                }
+            },
+            WindowEvent::MouseWheel { device_id: _, delta, phase } => match phase
+            {
+                _ => {
+                    let accel = match delta
+                    {
+                        MouseScrollDelta::LineDelta(x, y) => y as f64,
+                        MouseScrollDelta::PixelDelta(PhysicalPosition {x, y}) => y
+                    };
+                    self.view_control.accel_zoom(ZoomDirection::Inwards, Some(f!(accel)), &self.view);
                 }
             },
             WindowEvent::CursorMoved { position, device_id: _ } => {

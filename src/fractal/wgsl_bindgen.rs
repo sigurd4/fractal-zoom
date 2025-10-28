@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 195bec8c8304ef75ee74b89cca77f016c7df78e78cfd6b12ee52c605716de788
+// SourceHash: 62c3325b7f2f1eea72479f449ba395d3ce16e4799876150cb32c01db77b6cd39
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -493,7 +493,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
         let _e39 = i;
         let _e41 = z;
         let _e42 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e41);
-        if ((_e39 < n_1) && (_e42 < 4f)) {
+        if ((_e39 < n_1) && (_e42 < 2f)) {
         } else {
             break;
         }

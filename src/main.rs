@@ -1,6 +1,8 @@
-use core::{f64::consts::TAU, ops::Range};
+#![feature(trait_alias)]
 
-use num_complex::Complex;
+use core::{f64::consts::TAU, fmt::Display, ops::Range};
+
+use num_complex::{Complex, ComplexFloat};
 
 moddef::moddef!(
     mod {
@@ -15,17 +17,28 @@ macro_rules! f {
     };
 }   
 use f as f;
-use num_traits::Num;
+use num_traits::{Float, FloatConst, Num, NumAssignOps, float::FloatCore};
+use rand::distr::uniform::SampleUniform;
 use winit::{event_loop::{ActiveEventLoop, EventLoop}, window::Window};
 
 use crate::{app::{App, State}, fractal::Mandelbrot};
 
 const START_ZOOM: f32 = 100.0;
+
 const ROT_SPEED: f64 = TAU/1000.0;
 const MOVE_CENTER_SPEED: f64 = 10.0;
 const MOVE_EXP_SPEED: f64 = 10.0;
+
+const ROT_ACCEL: f64 = 1.0;
+const MOVE_CENTER_ACCEL: f64 = 1.0;
+const MOVE_EXP_ACCEL: f64 = 1.0;
+const MOVE_ZOOM_ACCEL: f64 = 1.0;
+
+const ZOOM_RANGE: Range<f64> = -1e-9..1e9;
 const ZOOM_MUL: f64 = 0.995;
 const MAX_ITERATIONS: u32 = 64;
+
+pub trait MyFloat = Float + FloatConst + FloatCore + ComplexFloat + NumAssignOps + SampleUniform + Display;
 
 fn clamp_rem<T>(x: T, range: Range<T>) -> T
 where

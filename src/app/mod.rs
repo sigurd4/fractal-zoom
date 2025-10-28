@@ -5,7 +5,7 @@ use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::{distr::{uniform::SampleUniform}};
 use winit::{application::ApplicationHandler, event::WindowEvent, window::Window};
 
-use crate::fractal::Fractal;
+use crate::{MyFloat, fractal::Fractal};
 
 moddef::moddef!(
     flat(pub) mod {
@@ -16,7 +16,7 @@ moddef::moddef!(
 
 pub struct App<F, Z, G = fn() -> Z>
 where
-    F: Float,
+    F: MyFloat,
     G: FnMut() -> Z,
     Z: Fractal
 {
@@ -26,7 +26,7 @@ where
 
 impl<F, Z, G> App<F, Z, G>
 where
-    F: Float,
+    F: MyFloat,
     G: FnMut() -> Z,
     Z: Fractal
 {
@@ -41,7 +41,7 @@ where
 
 impl<F, Z, G> ApplicationHandler<()> for App<F, Z, G>
 where
-    F: Float + NumAssignOps + SampleUniform + FloatCore + FloatConst + Display,
+    F: MyFloat,
     RangeInclusive<F>: Linspace<F>,
     G: FnMut() -> Z,
     Z: Fractal

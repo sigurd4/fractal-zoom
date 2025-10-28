@@ -21,7 +21,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var z = c;
     var i: u32 = 0;
     let n = u32(max_iterations());
-    for(; i < n && norm_sqr(z) < 4.0; i++)
+    for(; i < n && norm_sqr(z) < 2.0; i++)
     {
         z = (powc(z, globals.exp) + c);
     }

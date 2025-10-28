@@ -16,14 +16,13 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
-    //return vec4<f32>(pos.x, pos.y, 0.0, 1.0);
     let pos = position.xy - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
     let c = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
     var z = c;
     var i = 0;
-    for(; i < 128 && norm_sqr(z) < 2.0; i++)
+    for(; i < 64 && norm_sqr(z) < 4.0; i++)
     {
-        z = powc(z, globals.exp) + c;
+        z = (powc(z, globals.exp) + c);
     }
 
     let z_norm = f32(norm(z));

@@ -1,15 +1,25 @@
 struct GlobalUniforms {
-    view: mat3x3<f32>,
+    window_size: vec2<u32>,
+    center: vec2<f32>,
+    zoom: f32,
+    rot: f32,
     exp: vec2<f32>
 };
 
 struct VertexInput {
     @builtin(vertex_index) vertex_index: u32,
-    @location(0) position: vec3<f32>
+    @location(0) vertex_id: u32
 };
 
 @group(0) @binding(0)
 var<uniform> globals: GlobalUniforms;
+
+fn hsl2rgb(c: vec3<f32>) -> vec3<f32>
+{
+    let rgb = clamp( abs(((c.x*6.0 + vec3(0.0,4.0,2.0)) % 6.0) - 3.0) - 1.0, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0) );
+
+    return c.z + c.y * (rgb-0.5)*(1.0-abs(2.0*c.z-1.0));
+}
 
 fn cis(rot: f32) -> vec2<f32>
 {
@@ -21,15 +31,12 @@ fn cis(rot: f32) -> vec2<f32>
 
 fn cmul(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32>
 {
-    return vec2(
-        lhs.x*rhs.x - lhs.y*rhs.y,
-        lhs.x*lhs.y + lhs.y*rhs.x
-    );
+    return mat2x2(lhs.x, lhs.y, -lhs.y, lhs.x)*rhs;
 }
 
 fn norm_sqr(x: vec2<f32>) -> f32
 {
-    return x.x*x.x + x.y*x.y;
+    return dot(x, x);
 }
 
 fn norm(x: vec2<f32>) -> f32
@@ -57,5 +64,5 @@ fn cexp(x: vec2<f32>) -> vec2<f32>
 
 fn powc(x: vec2<f32>, y: vec2<f32>) -> vec2<f32>
 {
-    return cexp(y*clog(x));
+    return cexp(cmul(y, clog(x)));
 }

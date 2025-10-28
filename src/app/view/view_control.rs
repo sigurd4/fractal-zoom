@@ -1,8 +1,10 @@
+use core::fmt::Display;
+
 use num_complex::Complex;
 use num_traits::{Float, NumAssignOps};
 use winit::event::ElementState;
 
-use crate::{MOVE_SPEED, ROT_SPEED, ZOOM_MUL, app::view::View, f};
+use crate::{MOVE_CENTER_SPEED, MOVE_EXP_SPEED, ROT_SPEED, ZOOM_MUL, app::view::View, f};
 
 use super::{MoveDirection, RotateDirection};
 
@@ -11,7 +13,8 @@ pub struct ViewControl
 {
     center_move: [Option<bool>; 2],
     zoom_dir: bool,
-    rot_dir: Option<bool>
+    rot_dir: Option<bool>,
+    exp_move: [Option<bool>; 2],
 }
 
 impl Default for ViewControl
@@ -21,7 +24,8 @@ impl Default for ViewControl
         Self {
             center_move: [None; 2],
             zoom_dir: true,
-            rot_dir: None
+            rot_dir: None,
+            exp_move: [None; 2]
         }
     }
 }
@@ -31,6 +35,15 @@ impl ViewControl
     pub fn move_center(&mut self, direction: MoveDirection, button_state: ElementState)
     {
         self.center_move[direction.axis() as usize] = match button_state
+        {
+            ElementState::Pressed => Some(direction.forward()),
+            ElementState::Released => None
+        }
+    }
+
+    pub fn move_exp(&mut self, direction: MoveDirection, button_state: ElementState)
+    {
+        self.exp_move[direction.axis() as usize] = match button_state
         {
             ElementState::Pressed => Some(direction.forward()),
             ElementState::Released => None
@@ -57,7 +70,7 @@ impl ViewControl
 
     pub(super) fn update_view<F>(self, view: &mut View<F>)
     where
-        F: Float + NumAssignOps
+        F: Float + NumAssignOps + Display
     {
         fn rot270<F>(z: Complex<F>) -> Complex<F>
         where
@@ -76,11 +89,23 @@ impl ViewControl
             .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
             .filter_map(|(center_move, phase)| center_move.map(|dir| (dir, phase)))
         {
-            let move_center = phase(Complex::from_polar(f!(MOVE_SPEED)/view.zoom, view.rot));
+            let move_center = phase(Complex::from_polar(f!(MOVE_CENTER_SPEED)/view.zoom, view.rot));
             match dir
             {
                 true => view.center -= move_center,
                 false => view.center += move_center
+            }
+        }
+
+        for (dir, phase) in self.exp_move.into_iter()
+            .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
+            .filter_map(|(exp_move, phase)| exp_move.map(|dir| (dir, phase)))
+        {
+            let exp_move = phase(Complex::from(f!(MOVE_EXP_SPEED)/view.zoom));
+            match dir
+            {
+                true => view.exp -= exp_move,
+                false => view.exp += exp_move
             }
         }
 
@@ -103,5 +128,7 @@ impl ViewControl
             true => view.zoom /= zoom_mul,
             false => view.zoom *= zoom_mul
         }
+
+        println!("center = {}, rot = {}, zoom = {}", view.center, view.rot, view.zoom)
     }
 }

@@ -1,29 +1,39 @@
-#import global_bindings::{GlobalUniforms, VertexInput, globals, norm_sqr, powc, norm}
+#import global_bindings::{GlobalUniforms, VertexInput, globals, norm_sqr, powc, norm, cis, cmul, hsl2rgb};
 
 @vertex
 fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 {
-    let pos= in.position*globals.view;
-    return vec4<f32>(pos.x, pos.y, 0.0, 1.0);
+    let corner = in.vertex_index % 3;
+    let n = in.vertex_index/3 % 2 == 1;
+    let pos = vec2(
+        f32(u32(corner == 1 || (corner == 0 && n))*globals.window_size.x) - f32(globals.window_size.x)/2.0,
+        f32(u32(corner == 2 || (corner == 0 && n))*globals.window_size.y) - f32(globals.window_size.y)/2.0
+    );
+
+    return vec4<f32>(pos, 0.0, 1.0);
 }
 
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
-    let c = position.xy/position.w;
+    //return vec4<f32>(pos.x, pos.y, 0.0, 1.0);
+    let pos = position.xy - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
+    let c = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
     var z = c;
-    for(var i = 0; i < 1024 && norm_sqr(z) < 4.0; i++)
+    var i = 0;
+    for(; i < 128 && norm_sqr(z) < 2.0; i++)
     {
         z = powc(z, globals.exp) + c;
     }
 
     let z_norm = norm(z);
-    let color = vec2(z_norm + z.x, z_norm + z.y);
+
+    let hue = atan2(z.y, z.x)/radians(360) + 0.5;
+
+    let t = f32(i);
 
     return vec4(
-        color.x,
-        z_norm*2.0 - (color.x + color.y)/2.0,
-        color.y,
-        z_norm*2.0
+        hsl2rgb(vec3(hue, 0.5, z_norm % 1.0)),
+        1.0
     );
 }

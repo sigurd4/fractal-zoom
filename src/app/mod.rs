@@ -1,4 +1,4 @@
-use core::ops::RangeInclusive;
+use core::{fmt::Display, ops::RangeInclusive};
 
 use linspace::Linspace;
 use num_traits::{Float, NumAssignOps, float::FloatCore};
@@ -41,7 +41,7 @@ where
 
 impl<F, Z, G> ApplicationHandler<()> for App<F, Z, G>
 where
-    F: Float + NumAssignOps + SampleUniform + FloatCore,
+    F: Float + NumAssignOps + SampleUniform + FloatCore + Display,
     RangeInclusive<F>: Linspace<F>,
     G: FnMut() -> Z,
     Z: Fractal

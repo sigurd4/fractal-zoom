@@ -1,13 +1,14 @@
-use core::ops::RangeInclusive;
+use core::{fmt::Display, ops::RangeInclusive};
 use std::sync::Arc;
 
 use linspace::Linspace;
+use num_complex::Complex;
 use num_traits::{Float, NumAssignOps, float::FloatCore};
 use rand::distr::uniform::SampleUniform;
 use wgpu::{SurfaceConfiguration, util::DeviceExt};
-use winit::{dpi::PhysicalSize, event::WindowEvent, keyboard::{KeyCode, PhysicalKey}, window::Window};
+use winit::{dpi::{PhysicalSize, Size}, event::{ElementState, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
 
-use crate::{PIXEL_SIZE, app::{MoveDirection, RotateDirection, view::{View, ViewControl}}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
+use crate::{app::{MoveDirection, RotateDirection, view::{View, ViewControl}}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
 
 #[derive(Debug)]
 pub struct State<F, Z>
@@ -32,7 +33,7 @@ where
 
 impl<F, Z> State<F, Z>
 where
-    F: Float,
+    F: Float + Display,
     Z: Fractal
 {
     pub async fn new(window: Window, fractal: Z) -> anyhow::Result<Self>
@@ -92,10 +93,7 @@ where
 
         let view = View::default();
 
-        let global_uniforms = GlobalUniforms::new(
-            view.transform_3x3(),
-            view.exp_vec2()
-        );
+        let global_uniforms = view.uniforms(size);
 
         let global_uniforms_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Global uniforms buffer"),
@@ -137,17 +135,9 @@ where
 
     fn vertex_buffer(device: &wgpu::Device, resolution: PhysicalSize<u32>) -> wgpu::Buffer
     {
-        let vertices = (0..resolution.height)
-            .step_by(PIXEL_SIZE)
-            .flat_map(|j| (0..resolution.width)
-                .step_by(PIXEL_SIZE)
-                .map(move |i| VertexInput::new(glam::vec3(
-                    i as f32 - resolution.width as f32,
-                    j as f32 - resolution.height as f32,
-                    1.0
-                )))
-            ).collect::<Vec<_>>();
+        let vertices = core::array::from_fn::<_, 6, _>(|i| VertexInput { vertex_id: i as u32 });
 
+        println!("Creating vertex buffer.");
         device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Fractal Vertex Buffer"),
             contents: bytemuck::cast_slice(&vertices),
@@ -177,10 +167,7 @@ where
         self.view.update(self.view_control);
 
         // Update global uniforms with new frame size immediately
-        let global_uniforms = GlobalUniforms::new(
-            self.view.transform_3x3(),
-            self.view.exp_vec2()
-        );
+        let global_uniforms = self.view.uniforms(self.size);
 
         self.queue.write_buffer(
             &self.global_uniforms_buffer,
@@ -216,35 +203,51 @@ where
 
                 enum Action
                 {
-                    Move(MoveDirection),
+                    MoveCenter(MoveDirection),
+                    MoveExp(MoveDirection),
                     Rotate(RotateDirection),
                     Zoom,
-                    Idle
+                    Idle,
+                    Fullscreen,
+                    Reset
                 }
 
                 match match event.physical_key
                 {
                     PhysicalKey::Code(key_code) => match key_code {
-                        KeyCode::Escape => {
+                        KeyCode::Escape | KeyCode::Abort => {
                             event_loop.exit();
                             return;
                         }
-                        KeyCode::KeyW | KeyCode::ArrowUp => Action::Move(MoveDirection::Up),
-                        KeyCode::KeyA | KeyCode::ArrowLeft => Action::Move(MoveDirection::Left),
-                        KeyCode::KeyS | KeyCode::ArrowDown => Action::Move(MoveDirection::Down),
-                        KeyCode::KeyD | KeyCode::ArrowRight => Action::Move(MoveDirection::Right),
+                        KeyCode::KeyW => Action::MoveExp(MoveDirection::Up),
+                        KeyCode::KeyA => Action::MoveExp(MoveDirection::Left),
+                        KeyCode::KeyS => Action::MoveExp(MoveDirection::Down),
+                        KeyCode::KeyD => Action::MoveExp(MoveDirection::Right),
+                        KeyCode::ArrowUp => Action::MoveCenter(MoveDirection::Up),
+                        KeyCode::ArrowLeft => Action::MoveCenter(MoveDirection::Left),
+                        KeyCode::ArrowDown => Action::MoveCenter(MoveDirection::Down),
+                        KeyCode::ArrowRight => Action::MoveCenter(MoveDirection::Right),
                         KeyCode::KeyQ => Action::Rotate(RotateDirection::Left),
                         KeyCode::KeyE => Action::Rotate(RotateDirection::Right),
                         KeyCode::Space => Action::Zoom,
+                        KeyCode::KeyF if matches!(event.state, ElementState::Pressed) => Action::Fullscreen,
+                        KeyCode::KeyR if matches!(event.state, ElementState::Pressed) => Action::Reset,
                         _ => Action::Idle
                     },
                     PhysicalKey::Unidentified(_) => Action::Idle
                 }
                 {
                     Action::Idle => (),
-                    Action::Move(direction) => self.view_control.move_center(direction, event.state),
+                    Action::MoveCenter(direction) => self.view_control.move_center(direction, event.state),
+                    Action::MoveExp(direction) => self.view_control.move_exp(direction, event.state),
                     Action::Rotate(direction) => self.view_control.rotate(direction, event.state),
                     Action::Zoom => self.view_control.zoom(event.state),
+                    Action::Fullscreen => self.window.set_fullscreen(match self.window.fullscreen()
+                    {
+                        Some(Fullscreen::Borderless(_) | Fullscreen::Exclusive(_)) => None,
+                        None => Some(Fullscreen::Borderless(None))
+                    }),
+                    Action::Reset => self.view = View::default()
                 }
 
                 self.window.request_redraw();
@@ -297,7 +300,7 @@ where
                 depth_slice: None,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
                     store: wgpu::StoreOp::Store,
                 },
             })],

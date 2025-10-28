@@ -1,5 +1,3 @@
-use bytemuck::{Pod, Zeroable};
-
 const RECURSION_LIMIT: usize = 256;
 
 moddef::moddef!(

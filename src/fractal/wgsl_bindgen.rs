@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: ddd60518e4b410455e70d9f0ade54c7bdb0d2b3090fa8435c2e10b67f03277d7
+// SourceHash: 473e416893acbdcceda86d8571dd5c68155b6a7eaac2d649aed4e9dca0e33174
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -80,9 +80,12 @@ pub mod layout_asserts
         assert!(std::mem::align_of::<glam::Mat4>() == 16);
     };
     const GLOBAL_BINDINGS_GLOBAL_UNIFORMS_ASSERTS: () = {
-        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, view) == 0);
-        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, exp) == 48);
-        assert!(std::mem::size_of::<global_bindings::GlobalUniforms>() == 64);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, window_size) == 0);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, center) == 8);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, zoom) == 16);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, rot) == 20);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, exp) == 24);
+        assert!(std::mem::size_of::<global_bindings::GlobalUniforms>() == 32);
     };
 }
 pub mod global_bindings
@@ -92,20 +95,20 @@ pub mod global_bindings
     #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct VertexInput
     {
-        pub position: glam::Vec3
+        pub vertex_id: u32
     }
     impl VertexInput
     {
-        pub const fn new(position: glam::Vec3) -> Self
+        pub const fn new(vertex_id: u32) -> Self
         {
-            Self { position }
+            Self { vertex_id }
         }
     }
     impl VertexInput
     {
         pub const VERTEX_ATTRIBUTES: [wgpu::VertexAttribute; 1] = [wgpu::VertexAttribute {
-            format: wgpu::VertexFormat::Float32x3,
-            offset: std::mem::offset_of!(Self, position) as u64,
+            format: wgpu::VertexFormat::Uint32,
+            offset: std::mem::offset_of!(Self, vertex_id) as u64,
             shader_location: 0
         }];
 
@@ -118,46 +121,32 @@ pub mod global_bindings
             }
         }
     }
-    #[repr(C, align(16))]
+    #[repr(C, align(8))]
     #[derive(Debug, PartialEq, Clone, Copy)]
     pub struct GlobalUniforms
     {
-        #[doc = "offset: 0, size: 48, type: `mat3x3<f32>`"]
-        pub view: glam::Mat3A,
-        #[doc = "offset: 48, size: 8, type: `vec2<f32>`"]
-        pub exp: glam::Vec2,
-        pub _pad_exp: [u8; 0x8]
+        #[doc = "offset: 0, size: 8, type: `vec2<u32>`"]
+        pub window_size: glam::UVec2,
+        #[doc = "offset: 8, size: 8, type: `vec2<f32>`"]
+        pub center: glam::Vec2,
+        #[doc = "offset: 16, size: 4, type: `f32`"]
+        pub zoom: f32,
+        #[doc = "offset: 20, size: 4, type: `f32`"]
+        pub rot: f32,
+        #[doc = "offset: 24, size: 8, type: `vec2<f32>`"]
+        pub exp: glam::Vec2
     }
     impl GlobalUniforms
     {
-        pub const fn new(view: glam::Mat3A, exp: glam::Vec2) -> Self
+        pub const fn new(window_size: glam::UVec2, center: glam::Vec2, zoom: f32, rot: f32, exp: glam::Vec2) -> Self
         {
-            Self { view, exp, _pad_exp: [0; 0x8] }
-        }
-    }
-    #[repr(C)]
-    #[derive(Debug, PartialEq, Clone, Copy)]
-    pub struct GlobalUniformsInit
-    {
-        pub view: glam::Mat3A,
-        pub exp: glam::Vec2
-    }
-    impl GlobalUniformsInit
-    {
-        pub fn build(&self) -> GlobalUniforms
-        {
-            GlobalUniforms {
-                view: self.view,
-                exp: self.exp,
-                _pad_exp: [0; 0x8]
+            Self {
+                window_size,
+                center,
+                zoom,
+                rot,
+                exp
             }
-        }
-    }
-    impl From<GlobalUniformsInit> for GlobalUniforms
-    {
-        fn from(data: GlobalUniformsInit) -> Self
-        {
-            data.build()
         }
     }
     #[derive(Debug)]
@@ -349,19 +338,35 @@ pub mod mandelbrot
     pub const SHADER_STRING: &str = r#"
 struct VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
     @builtin(vertex_index) vertex_index: u32,
-    @location(0) position: vec3<f32>,
+    @location(0) @interpolate(flat) vertex_id: u32,
 }
 
 struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
-    view: mat3x3<f32>,
+    window_size: vec2<u32>,
+    center: vec2<f32>,
+    zoom: f32,
+    rot: f32,
     exp: vec2<f32>,
 }
 
 @group(0) @binding(0) 
 var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
 
+fn hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(c: vec3<f32>) -> vec3<f32> {
+    let rgb = clamp((abs((((vec3((c.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
+    return (vec3(c.z) + ((c.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c.z) - 1f)))));
+}
+
+fn cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(rot: f32) -> vec2<f32> {
+    return vec2<f32>(cos(rot), sin(rot));
+}
+
+fn cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32> {
+    return (mat2x2<f32>(vec2<f32>(lhs.x, lhs.y), vec2<f32>(-(lhs.y), lhs.x)) * rhs);
+}
+
 fn norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x: vec2<f32>) -> f32 {
-    return ((x.x * x.x) + (x.y * x.y));
+    return dot(x, x);
 }
 
 fn normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_1: vec2<f32>) -> f32 {
@@ -379,10 +384,6 @@ fn clogX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3: vec2<f32>) -> vec2<f32> {
     return vec2<f32>((log(_e1) / 2f), _e5);
 }
 
-fn cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(rot: f32) -> vec2<f32> {
-    return vec2<f32>(cos(rot), sin(rot));
-}
-
 fn cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4: vec2<f32>) -> vec2<f32> {
     let _e4 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4.y);
     return (exp(x_4.x) * _e4);
@@ -390,15 +391,21 @@ fn cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4: vec2<f32>) -> vec2<f32> {
 
 fn powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5: vec2<f32>, y: vec2<f32>) -> vec2<f32> {
     let _e1 = clogX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5);
-    let _e4 = cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((y * _e1));
+    let _e3 = cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(y, _e1);
+    let _e4 = cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e3);
     return _e4;
 }
 
 @vertex 
 fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin(position) vec4<f32> {
-    let _e4 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.view;
-    let pos = (in.position * _e4);
-    return vec4<f32>(pos.x, pos.y, 0f, 1f);
+    let corner = (in.vertex_index % 3u);
+    let n = (((in.vertex_index / 3u) % 2u) == 1u);
+    let _e21 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e27 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e42 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let _e48 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos = vec2<f32>((f32((u32(((corner == 1u) || ((corner == 0u) && n))) * _e21)) - (f32(_e27) / 2f)), (f32((u32(((corner == 2u) || ((corner == 0u) && n))) * _e42)) - (f32(_e48) / 2f)));
+    return vec4<f32>(pos, 0f, 1f);
 }
 
 @fragment 
@@ -406,33 +413,44 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     var z: vec2<f32>;
     var i: i32 = 0i;
 
-    let c = (position.xy / vec2(position.w));
-    z = c;
+    let _e6 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e11 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = (position.xy - (vec2<f32>(f32(_e6), f32(_e11)) / vec2(2f)));
+    let _e20 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e25 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e26 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e25);
+    let _e27 = cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((pos_1 / vec2(_e20)), _e26);
+    let _e30 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    let c_1 = (_e27 - _e30);
+    z = c_1;
     loop {
-        let _e8 = i;
-        let _e11 = z;
-        let _e12 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e11);
-        if ((_e8 < 1024i) && (_e12 < 4f)) {
+        let _e34 = i;
+        let _e37 = z;
+        let _e38 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e37);
+        if ((_e34 < 128i) && (_e38 < 2f)) {
         } else {
             break;
         }
         {
-            let _e16 = z;
-            let _e19 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e20 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e16, _e19);
-            z = (_e20 + c);
+            let _e42 = z;
+            let _e45 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e46 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e42, _e45);
+            z = ((_e46 + c_1) * 2f);
         }
         continuing {
-            let _e23 = i;
-            i = (_e23 + 1i);
+            let _e51 = i;
+            i = (_e51 + 1i);
         }
     }
-    let _e25 = z;
-    let _e26 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e25);
-    let _e28 = z.x;
-    let _e31 = z.y;
-    let color = vec2<f32>((_e26 + _e28), (_e26 + _e31));
-    return vec4<f32>(color.x, ((_e26 * 2f) - ((color.x + color.y) / 2f)), color.y, (_e26 * 2f));
+    let _e53 = z;
+    let _e54 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e53);
+    let _e56 = z.y;
+    let _e58 = z.x;
+    let hue = ((atan2(_e56, _e58) / 6.2831855f) + 0.5f);
+    let _e64 = i;
+    let t = f32(_e64);
+    let _e70 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, 0.5f, (_e54 % 1f)));
+    return vec4<f32>(_e70, 1f);
 }
 "#;
 }

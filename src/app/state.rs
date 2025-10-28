@@ -152,7 +152,7 @@ where
 
     pub fn update(&mut self)
     {
-        self.view.update(self.view_control);
+        self.view.update(&mut self.view_control);
 
         // Update global uniforms with new frame size immediately
         let global_uniforms = self.view.uniforms();

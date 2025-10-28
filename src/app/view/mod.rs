@@ -58,7 +58,21 @@ where
         }
     }
 
-    pub fn update(&mut self, control: ViewControl<F>)
+    pub fn exp(&self) -> Complex<F>
+    {
+        let f = |z| Float::tan(z);
+
+        Complex::new(f(self.phi.re), f(self.phi.im))
+    }
+
+    pub fn dexp_dphi(&self) -> Complex<F>
+    {
+        let f = |z| F::one() - Float::tan(z)/Float::cos(z);
+
+        Complex::new(f(self.phi.re), f(self.phi.im))
+    }
+
+    pub fn update(&mut self, control: &mut ViewControl<F>)
     {
         control.update_view(self);
     }
@@ -76,7 +90,7 @@ where
                 f!(mouse_pos.y - self.win_size.height as f64/2.0)
             );
             self.mouse_pos = Some(mouse_pos);
-            println!("Mouse pos: x = {}, y = {}", mouse_pos.re, mouse_pos.im);
+            //println!("Mouse pos: x = {}, y = {}", mouse_pos.re, mouse_pos.im);
         }
     }
 

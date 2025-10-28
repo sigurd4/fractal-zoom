@@ -1,10 +1,10 @@
 use core::fmt::Display;
 
-use num_complex::Complex;
+use num_complex::{Complex, ComplexFloat};
 use num_traits::{Float, FloatConst, NumAssignOps, Zero};
 use winit::event::{ElementState, TouchPhase};
 
-use crate::{MOVE_CENTER_ACCEL, MOVE_CENTER_SPEED, MOVE_EXP_ACCEL, MOVE_EXP_SPEED, MOVE_ZOOM_ACCEL, MyFloat, ROT_ACCEL, ROT_SPEED, ZOOM_MUL, app::{ZoomDirection, view::View}, clamp_rem, f};
+use crate::{MOVE_CENTER_ACCEL, MOVE_CENTER_SPEED, MOVE_EXP_ACCEL, MOVE_EXP_SPEED, MOVE_ZOOM_ACCEL, MyFloat, ROT_ACCEL, ROT_SPEED, ZOOM_MUL, ZOOM_RANGE, app::{ZoomDirection, view::View}, clamp_rem, f};
 
 use super::{MoveDirection, RotateDirection};
 
@@ -139,7 +139,7 @@ where
         }
     }
 
-    pub(super) fn update_view(self, view: &mut View<F>)
+    pub(super) fn update_view(&mut self, view: &mut View<F>)
     {
         fn rot270<F>(z: Complex<F>) -> Complex<F>
         where
@@ -167,6 +167,7 @@ where
         }
         view.center += self.center_vel;
 
+        let prev_phi = view.phi;
         for (dir, phase) in self.phi_move.into_iter()
             .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
             .filter_map(|(exp_move, phase)| exp_move.map(|dir| (dir, phase)))
@@ -177,13 +178,23 @@ where
                 true => view.phi -= phi_move,
                 false => view.phi += phi_move
             }
-            view.phi.re = clamp_rem(view.phi.re, F::zero()..F::TAU());
-            view.phi.im = clamp_rem(view.phi.im, F::zero()..F::TAU())
         }
         match self.reverse
         {
             true => view.phi -= self.phi_vel,
             false => view.phi += self.phi_vel
+        }
+        view.phi.re = clamp_rem(view.phi.re, F::zero()..F::TAU());
+        view.phi.im = clamp_rem(view.phi.im, F::zero()..F::TAU());
+        let exp = view.exp();
+        // f = view.center.powc(exp) - view.center
+        let df_dcenter = exp*view.center.powc(exp - F::one()) - F::one();
+        let df_dexp = view.center.ln()*view.center.powc(exp);
+        let dcenter_dphi = df_dexp/df_dcenter*view.dexp_dphi();
+        if dcenter_dphi.is_finite()
+        {
+            println!("dcenter_dphi = {dcenter_dphi}");
+            view.center -= dcenter_dphi*(view.phi - prev_phi);
         }
 
         match self.rot_dir
@@ -212,8 +223,14 @@ where
         };
         view.center += view.win_center/new_zoom - view.win_center/view.zoom;
         view.zoom = new_zoom;
+        let dir = (self.zoom_vel > F::one()) ^ self.reverse;
+        if (view.zoom > f!(ZOOM_RANGE.end) && dir)
+            || (view.zoom < f!(ZOOM_RANGE.start) && !dir)
+        {
+            self.zoom_vel = Float::recip(self.zoom_vel)
+        }
 
-        //println!("center = {}, rot = {}, zoom = {}", view.center, view.rot, view.zoom)
+        println!("center = {}, rot = {}, zoom = {}", view.center, view.rot, view.zoom)
     }
 
     pub fn reset(&mut self)

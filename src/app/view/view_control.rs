@@ -194,7 +194,7 @@ where
         if dcenter_dphi.is_finite()
         {
             println!("dcenter_dphi = {dcenter_dphi}");
-            view.center -= dcenter_dphi*(view.phi - prev_phi);
+            //view.center -= dcenter_dphi*(view.phi - prev_phi);
         }
 
         match self.rot_dir

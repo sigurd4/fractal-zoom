@@ -36,7 +36,7 @@ const MOVE_ZOOM_ACCEL: f64 = 1.0;
 
 const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip()*1e3;
 const ZOOM_MUL: f64 = 0.995;
-const MAX_ITERATIONS: u32 = 64;
+const MAX_ITERATIONS: u32 = 16;
 
 pub trait MyFloat = Float + FloatConst + FloatCore + ComplexFloat + NumAssignOps + SampleUniform + Display;
 

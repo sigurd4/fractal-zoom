@@ -24,6 +24,7 @@ const ROT_SPEED: f64 = TAU/1000.0;
 const MOVE_CENTER_SPEED: f64 = 10.0;
 const MOVE_EXP_SPEED: f64 = 10.0;
 const ZOOM_MUL: f64 = 0.995;
+const MAX_ITERATIONS: u32 = 64;
 
 fn main() -> anyhow::Result<()>
 {

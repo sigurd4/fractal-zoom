@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 40bc0462bf2dcb551c8a5e8f803a849d6943c0ca7d0d11117b12fef0831bf4a5
+// SourceHash: 195bec8c8304ef75ee74b89cca77f016c7df78e78cfd6b12ee52c605716de788
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -81,11 +81,12 @@ pub mod layout_asserts
     };
     const GLOBAL_BINDINGS_GLOBAL_UNIFORMS_ASSERTS: () = {
         assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, window_size) == 0);
-        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, center) == 8);
-        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, zoom) == 16);
-        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, rot) == 20);
-        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, exp) == 24);
-        assert!(std::mem::size_of::<global_bindings::GlobalUniforms>() == 32);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, max_iterations) == 8);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, center) == 16);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, zoom) == 24);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, rot) == 28);
+        assert!(std::mem::offset_of!(global_bindings::GlobalUniforms, exp) == 32);
+        assert!(std::mem::size_of::<global_bindings::GlobalUniforms>() == 40);
     };
 }
 pub mod global_bindings
@@ -127,26 +128,64 @@ pub mod global_bindings
     {
         #[doc = "offset: 0, size: 8, type: `vec2<u32>`"]
         pub window_size: glam::UVec2,
-        #[doc = "offset: 8, size: 8, type: `vec2<f32>`"]
+        #[doc = "offset: 8, size: 4, type: `u32`"]
+        pub max_iterations: u32,
+        pub _pad_max_iterations: [u8; 0x4],
+        #[doc = "offset: 16, size: 8, type: `vec2<f32>`"]
         pub center: glam::Vec2,
-        #[doc = "offset: 16, size: 4, type: `f32`"]
+        #[doc = "offset: 24, size: 4, type: `f32`"]
         pub zoom: f32,
-        #[doc = "offset: 20, size: 4, type: `f32`"]
+        #[doc = "offset: 28, size: 4, type: `f32`"]
         pub rot: f32,
-        #[doc = "offset: 24, size: 8, type: `vec2<f32>`"]
+        #[doc = "offset: 32, size: 8, type: `vec2<f32>`"]
         pub exp: glam::Vec2
     }
     impl GlobalUniforms
     {
-        pub const fn new(window_size: glam::UVec2, center: glam::Vec2, zoom: f32, rot: f32, exp: glam::Vec2) -> Self
+        pub const fn new(window_size: glam::UVec2, max_iterations: u32, center: glam::Vec2, zoom: f32, rot: f32, exp: glam::Vec2) -> Self
         {
             Self {
                 window_size,
+                max_iterations,
+                _pad_max_iterations: [0; 0x4],
                 center,
                 zoom,
                 rot,
                 exp
             }
+        }
+    }
+    #[repr(C)]
+    #[derive(Debug, PartialEq, Clone, Copy)]
+    pub struct GlobalUniformsInit
+    {
+        pub window_size: glam::UVec2,
+        pub max_iterations: u32,
+        pub center: glam::Vec2,
+        pub zoom: f32,
+        pub rot: f32,
+        pub exp: glam::Vec2
+    }
+    impl GlobalUniformsInit
+    {
+        pub fn build(&self) -> GlobalUniforms
+        {
+            GlobalUniforms {
+                window_size: self.window_size,
+                max_iterations: self.max_iterations,
+                _pad_max_iterations: [0; 0x4],
+                center: self.center,
+                zoom: self.zoom,
+                rot: self.rot,
+                exp: self.exp
+            }
+        }
+    }
+    impl From<GlobalUniformsInit> for GlobalUniforms
+    {
+        fn from(data: GlobalUniformsInit) -> Self
+        {
+            data.build()
         }
     }
     #[derive(Debug)]
@@ -343,6 +382,7 @@ struct VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
 
 struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
     window_size: vec2<u32>,
+    max_iterations: u32,
     center: vec2<f32>,
     zoom: f32,
     rot: f32,
@@ -351,6 +391,12 @@ struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
 
 @group(0) @binding(0) 
 var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
+
+fn max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX() -> f32 {
+    let _e2 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.max_iterations;
+    let _e6 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    return (f32(_e2) * max(1f, log(_e6)));
+}
 
 fn hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(c: vec3<f32>) -> vec3<f32> {
     let rgb = clamp((abs((((vec3((c.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
@@ -396,6 +442,24 @@ fn powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5: vec2<f32>, y: vec2<f32>) -
     return _e4;
 }
 
+fn colormap2_(z_1: vec2<f32>, i_1: u32) -> vec4<f32> {
+    let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let t = clamp((f32(i_1) / _e2), 0f, 1f);
+    let _e8 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_1);
+    let hue = ((f32(_e8) / 6.2831855f) + 0.5f);
+    let _e16 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, 0.5f, t));
+    return vec4<f32>(_e16, 1f);
+}
+
+fn colormap1_(z_2: vec2<f32>, i_2: u32) -> vec4<f32> {
+    let _e1 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_2);
+    let z_norm = f32(_e1);
+    let _e3 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_2);
+    let hue_1 = ((f32(_e3) / 6.2831855f) + 0.5f);
+    let _e13 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue_1, 0.5f, (z_norm % 1f)));
+    return vec4<f32>(_e13, 1f);
+}
+
 @vertex 
 fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin(position) vec4<f32> {
     let corner = (in.vertex_index % 3u);
@@ -411,47 +475,43 @@ fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin
 @fragment 
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     var z: vec2<f32>;
-    var i: i32 = 0i;
+    var i: u32 = 0u;
 
-    let _e6 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
-    let _e11 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
-    let pos_1 = (position.xy - (vec2<f32>(f32(_e6), f32(_e11)) / vec2(2f)));
-    let _e20 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
-    let _e25 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
-    let _e26 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e25);
-    let _e27 = cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((pos_1 / vec2(_e20)), _e26);
-    let _e30 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
-    let c_1 = (_e27 - _e30);
+    let _e9 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e14 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e9), f32(_e14)) / vec2(2f)));
+    let _e23 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e28 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e29 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e28);
+    let _e30 = cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((pos_1 / vec2(_e23)), _e29);
+    let _e33 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    let c_1 = (_e30 - _e33);
     z = c_1;
+    let _e36 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let n_1 = u32(_e36);
     loop {
-        let _e34 = i;
-        let _e37 = z;
-        let _e38 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e37);
-        if ((_e34 < 64i) && (_e38 < 4f)) {
+        let _e39 = i;
+        let _e41 = z;
+        let _e42 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e41);
+        if ((_e39 < n_1) && (_e42 < 4f)) {
         } else {
             break;
         }
         {
-            let _e42 = z;
-            let _e45 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e46 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e42, _e45);
-            z = (_e46 + c_1);
+            let _e46 = z;
+            let _e49 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e50 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e46, _e49);
+            z = (_e50 + c_1);
         }
         continuing {
-            let _e49 = i;
-            i = (_e49 + 1i);
+            let _e53 = i;
+            i = (_e53 + 1u);
         }
     }
-    let _e51 = z;
-    let _e52 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e51);
-    let z_norm = f32(_e52);
-    let _e54 = z;
-    let _e55 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e54);
-    let hue = ((f32(_e55) / 6.2831855f) + 0.5f);
-    let _e61 = i;
-    let t = f32(_e61);
-    let _e67 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, 0.5f, (z_norm % 1f)));
-    return vec4<f32>(_e67, 1f);
+    let _e55 = z;
+    let _e56 = i;
+    let _e57 = colormap2_(_e55, _e56);
+    return _e57;
 }
 "#;
 }

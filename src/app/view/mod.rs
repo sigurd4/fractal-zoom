@@ -5,7 +5,7 @@ use num_traits::{Float, NumAssignOps};
 use rand::{Rng, distr::{Distribution, Uniform, uniform::SampleUniform}};
 use winit::dpi::PhysicalSize;
 
-use crate::{START_ZOOM, f, fractal::GlobalUniforms};
+use crate::{MAX_ITERATIONS, START_ZOOM, f, fractal::GlobalUniforms};
 
 moddef::moddef!(
     flat(pub) mod {
@@ -55,6 +55,8 @@ where
     pub fn uniforms(&self, size: PhysicalSize<u32>) -> GlobalUniforms
     {
         GlobalUniforms {
+            max_iterations: MAX_ITERATIONS,
+            _pad_max_iterations: [0; _],
             window_size: glam::uvec2(size.width, size.height),
             center: glam::vec2(self.center.re.to_f32().unwrap(), self.center.im.to_f32().unwrap()),
             zoom: self.zoom.to_f32().unwrap(),

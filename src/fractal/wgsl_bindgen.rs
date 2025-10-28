@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 473e416893acbdcceda86d8571dd5c68155b6a7eaac2d649aed4e9dca0e33174
+// SourceHash: 076d192750b93513d77092d698af6ccc0b6ec63a32067be9d4bf55be1ebe9c9b
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -435,22 +435,23 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
             let _e42 = z;
             let _e45 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
             let _e46 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e42, _e45);
-            z = ((_e46 + c_1) * 2f);
+            z = (_e46 + c_1);
         }
         continuing {
-            let _e51 = i;
-            i = (_e51 + 1i);
+            let _e49 = i;
+            i = (_e49 + 1i);
         }
     }
-    let _e53 = z;
-    let _e54 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e53);
-    let _e56 = z.y;
-    let _e58 = z.x;
-    let hue = ((atan2(_e56, _e58) / 6.2831855f) + 0.5f);
-    let _e64 = i;
-    let t = f32(_e64);
-    let _e70 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, 0.5f, (_e54 % 1f)));
-    return vec4<f32>(_e70, 1f);
+    let _e51 = z;
+    let _e52 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e51);
+    let z_norm = f32(_e52);
+    let _e54 = z;
+    let _e55 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e54);
+    let hue = ((f32(_e55) / 6.2831855f) + 0.5f);
+    let _e61 = i;
+    let t = f32(_e61);
+    let _e67 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, 0.5f, (z_norm % 1f)));
+    return vec4<f32>(_e67, 1f);
 }
 "#;
 }

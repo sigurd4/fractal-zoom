@@ -9,7 +9,7 @@ fn main() -> miette::Result<()>
         .serialization_strategy(WgslTypeSerializeStrategy::Bytemuck)
         .emit_rerun_if_change(true)
         //.shader_source_type(WgslShaderSourceType::ComposerWithRelativePath)
-        //.ir_capabilities(WgslShaderIrCapabilities::FLOAT64)
+        .ir_capabilities(WgslShaderIrCapabilities::FLOAT64)
         .type_map(wgsl_bindgen::GlamWgslTypeMap)
         .output("src/fractal/wgsl_bindgen.rs")
         .build()?

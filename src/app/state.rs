@@ -67,7 +67,8 @@ where
             label: None,
             required_features: wgpu::Features::TEXTURE_COMPRESSION_BC
                 | wgpu::Features::PUSH_CONSTANTS
-                | wgpu::Features::TEXTURE_BINDING_ARRAY,
+                | wgpu::Features::TEXTURE_BINDING_ARRAY
+                | wgpu::Features::SHADER_F64,
             required_limits: wgpu::Limits {
                 max_push_constant_size: 128,
                 max_binding_array_elements_per_shader_stage: 4,
@@ -255,12 +256,12 @@ where
             WindowEvent::Resized(physical_size) => {
                 self.resize(physical_size);
                 self.window.request_redraw();
-            }
+            },
             /*WindowEvent::CursorMoved { position, .. } => {
                 state.update_mouse_position(position);
                 state.window.request_redraw();
             }*/
-            WindowEvent::ScaleFactorChanged { .. } => {}
+            WindowEvent::ScaleFactorChanged { .. } => {},
             WindowEvent::RedrawRequested => {
                 match self.render()
                 {
@@ -270,7 +271,8 @@ where
                     Err(e) => eprintln!("{e:?}"),
                 }
                 self.window.request_redraw();
-            }
+            },
+            WindowEvent::Destroyed => event_loop.exit(),
             _ => {
                 self.window.request_redraw();
             }

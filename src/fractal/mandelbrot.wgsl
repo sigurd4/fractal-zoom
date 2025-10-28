@@ -1,4 +1,4 @@
-#import global_bindings::{GlobalUniforms, VertexInput, globals, norm_sqr, powc, norm, cis, cmul, hsl2rgb};
+#import global_bindings::{GlobalUniforms, VertexInput, globals, norm_sqr, powc, norm, cis, cmul, dpowc, dnorm_sqr, dnorm, arg, darg, hsl2rgb};
 
 @vertex
 fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
@@ -26,9 +26,9 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
         z = powc(z, globals.exp) + c;
     }
 
-    let z_norm = norm(z);
+    let z_norm = f32(norm(z));
 
-    let hue = atan2(z.y, z.x)/radians(360) + 0.5;
+    let hue = f32(arg(z))/radians(360) + 0.5;
 
     let t = f32(i);
 

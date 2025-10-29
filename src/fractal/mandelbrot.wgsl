@@ -21,12 +21,26 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var z = c;
     var i: u32 = 0;
     let n = u32(max_iterations());
-    for(; i < n && norm_sqr(z) < 2.0; i++)
+    let c_norm_sqr = norm_sqr(z);
+    for(; i < n && norm_sqr(z) < c_norm_sqr*4.0; i++)
     {
         z = (powc(z, globals.exp) + c);
     }
 
-    return colormap2(z, i);
+    return colormap3(z, i);
+}
+
+fn colormap3(z: vec2<f32>, i: u32) -> vec4<f32>
+{
+    let t = clamp(f32(i)/max_iterations(), 0.0, 1.0);
+
+    let z_norm = 1.0 - exp(-f32(norm(z)));
+    let hue = f32(arg(z))/radians(360) + 0.5;
+
+    return vec4(
+        hsl2rgb(vec3(hue, z_norm/2.0, t)),
+        0.8
+    );
 }
 
 fn colormap2(z: vec2<f32>, i: u32) -> vec4<f32>
@@ -37,7 +51,7 @@ fn colormap2(z: vec2<f32>, i: u32) -> vec4<f32>
 
     return vec4(
         hsl2rgb(vec3(hue, 0.5, t)),
-        1.0
+        0.8
     );
 }
 

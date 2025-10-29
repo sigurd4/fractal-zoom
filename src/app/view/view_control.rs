@@ -4,7 +4,7 @@ use num_complex::{Complex, ComplexFloat};
 use num_traits::{Float, FloatConst, NumAssignOps, Zero};
 use winit::event::{ElementState, TouchPhase};
 
-use crate::{MOVE_CENTER_ACCEL, MOVE_CENTER_SPEED, MOVE_EXP_ACCEL, MOVE_EXP_SPEED, MOVE_ZOOM_ACCEL, MyFloat, ROT_ACCEL, ROT_SPEED, ZOOM_MUL, ZOOM_RANGE, app::{ZoomDirection, view::View}, clamp_rem, f};
+use crate::{MOVE_CENTER_ACCEL, MOVE_CENTER_SPEED, MOVE_EXP_ACCEL, MOVE_EXP_SPEED, MOVE_ZOOM_ACCEL, MyFloat, NEWTON_MU, ROT_ACCEL, ROT_SPEED, ZOOM_MU, ZOOM_MUL, ZOOM_RANGE, app::{ZoomDirection, view::View}, clamp_rem, f, fractal::Fractal};
 
 use super::{MoveDirection, RotateDirection};
 
@@ -33,7 +33,7 @@ where
         Self {
             center_vel: Complex::zero(),
             phi_vel: Complex::zero(),
-            zoom_vel: F::one(),
+            zoom_vel: f!(ZOOM_MUL),
             rot_vel: F::zero(),
             center_move: [None; 2],
             phi_move: [None; 2],
@@ -47,6 +47,18 @@ impl<F> ViewControl<F>
 where
     F: MyFloat
 {
+    pub fn reset(&mut self)
+    {
+        let Self { center_move, phi_move, reverse, rot_dir, .. } = *self;
+        *self = Self {
+            center_move,
+            phi_move,
+            reverse,
+            rot_dir,
+            ..Default::default()
+        }
+    }
+
     pub fn move_center(&mut self, direction: MoveDirection, button_state: ElementState)
     {
         self.center_move[direction.axis() as usize] = match button_state
@@ -139,7 +151,9 @@ where
         }
     }
 
-    pub(super) fn update_view(&mut self, view: &mut View<F>)
+    pub fn update_view<T>(&mut self, view: &mut View<F>, fractal: &T)
+    where
+        T: Fractal
     {
         fn rot270<F>(z: Complex<F>) -> Complex<F>
         where
@@ -167,6 +181,11 @@ where
         }
         view.center += self.center_vel;
 
+        if let Some(dc) = fractal.dc_newton(view.win_center/view.zoom - view.center, view.phi)
+        {
+            view.win_center += dc*f!(ZOOM_MU)*view.zoom;
+        }
+
         let prev_phi = view.phi;
         for (dir, phase) in self.phi_move.into_iter()
             .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
@@ -187,9 +206,9 @@ where
         view.phi.re = clamp_rem(view.phi.re, F::zero()..F::TAU());
         view.phi.im = clamp_rem(view.phi.im, F::zero()..F::TAU());
         let exp = view.exp();
-        // f = view.center.powc(exp) - view.center
-        let df_dcenter = exp*view.center.powc(exp - F::one()) - F::one();
-        let df_dexp = view.center.ln()*view.center.powc(exp);
+        // f = (view.win_center/view.zoom - view.center).powc(exp) - (view.win_center/view.zoom - view.center)
+        let df_dcenter = -exp*(view.win_center/view.zoom - view.center).powc(exp - F::one()) + F::one();
+        let df_dexp = (view.win_center/view.zoom - view.center).ln()*view.center.powc(exp);
         let dcenter_dphi = df_dexp/df_dcenter*view.dexp_dphi();
         if dcenter_dphi.is_finite()
         {
@@ -230,14 +249,9 @@ where
             self.zoom_vel = Float::recip(self.zoom_vel)
         }
 
-        println!("center = {}, rot = {}, zoom = {}", view.center, view.rot, view.zoom)
-    }
-
-    pub fn reset(&mut self)
-    {
-        self.center_vel = Complex::zero();
-        self.phi_vel = Complex::zero();
-        self.rot_vel = F::zero();
-        self.zoom_vel = F::one();
+        println!();
+        println!("center = {}, venter_vel = {}", view.center, self.center_vel);
+        println!("rot = {}, rot_vel = {}", view.rot, self.rot_vel);
+        println!("zoom = {}, zoom_vel = {}", view.zoom, self.zoom_vel);
     }
 }

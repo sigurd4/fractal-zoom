@@ -1,4 +1,6 @@
-use crate::fractal::Fractal;
+use num_complex::Complex;
+
+use crate::{MyFloat, fractal::{Fractal, dcdz}};
 
 use super::wgsl_bindgen::mandelbrot;
 
@@ -9,7 +11,7 @@ impl Fractal for Mandelbrot
 {
     const LABEL: &str = "mandelbrot";
 
-    fn setup_render_pipeline(device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
+    fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         // Create shader module from generated code
         let shader = mandelbrot::create_shader_module_embed_source(device);
@@ -27,8 +29,8 @@ impl Fractal for Mandelbrot
             fragment: Some(mandelbrot::fragment_state(&shader, &mandelbrot::fs_main_entry([
                 Some(wgpu::ColorTargetState {
                     format: surface_format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::COLOR,
                 })
             ]))),
             primitive: wgpu::PrimitiveState::default(),
@@ -37,6 +39,35 @@ impl Fractal for Mandelbrot
             multiview: None,
             cache: None
             // ... other pipeline state
+        })
+    }
+
+    fn f<F>(&self, c: Complex<F>, z: Option<Complex<F>>, phi: Complex<F>) -> Complex<F>
+    where
+        F: MyFloat
+    {
+        let exp = phi.tan();
+        z.unwrap_or(c).powc(exp) + c
+    }
+
+    fn f_newton<'a, F>(&'a self, c: Complex<F>, z: Option<Complex<F>>, phi: Complex<F>) -> impl Iterator<Item = Complex<F>> + 'a
+    where
+        F: MyFloat + 'a
+    {
+        let (mut c, z) = ([c, dcdz(z)].into_iter(), z.unwrap_or(c));
+
+        let mut exp = phi.tan();
+        let mut fmc = z.powc(exp);
+
+        core::iter::repeat_with(move || {
+            let mut f = fmc;
+            if let Some(c) = c.next()
+            {
+                f += c
+            }
+            fmc *= exp/z;
+            exp -= F::one();
+            f
         })
     }
 }

@@ -3,7 +3,7 @@ use core::{fmt::Display, ops::RangeInclusive};
 use linspace::Linspace;
 use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::{distr::{uniform::SampleUniform}};
-use winit::{application::ApplicationHandler, event::WindowEvent, window::Window};
+use winit::{application::ApplicationHandler, dpi::LogicalSize, event::WindowEvent, event_loop::ActiveEventLoop, window::{Fullscreen, Window, WindowId}};
 
 use crate::{MyFloat, fractal::Fractal};
 
@@ -46,13 +46,14 @@ where
     G: FnMut() -> Z,
     Z: Fractal
 {
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop)
+    fn resumed(&mut self, event_loop: &ActiveEventLoop)
     {
         let window = event_loop.create_window(
             Window::default_attributes()
             .with_title("fractal-zoom")
-            .with_min_inner_size(winit::dpi::LogicalSize::new(640, 480))
-            .with_inner_size(winit::dpi::LogicalSize::new(1024, 768))
+            .with_fullscreen(Some(Fullscreen::Borderless(None)))
+            .with_min_inner_size(LogicalSize::new(640, 480))
+            .with_inner_size(LogicalSize::new(1024, 768))
         ).unwrap();
 
         self.state = Some(futures::executor::block_on(async {
@@ -62,8 +63,8 @@ where
     
     fn window_event(
         &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
-        window_id: winit::window::WindowId,
+        event_loop: &ActiveEventLoop,
+        window_id: WindowId,
         event: WindowEvent,
     )
     {

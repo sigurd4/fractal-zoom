@@ -3,7 +3,7 @@ use num_traits::Float;
 use rand::distr::{Distribution, Uniform};
 use winit::dpi::{PhysicalPosition, PhysicalSize};
 
-use crate::{MAX_ITERATIONS, MyFloat, START_ZOOM, f, fractal::GlobalUniforms};
+use crate::{DONUT, MAX_ITERATIONS, MyFloat, START_ZOOM, f, fractal::{self, Fractal, GlobalUniforms}};
 
 moddef::moddef!(
     flat(pub) mod {
@@ -32,16 +32,21 @@ impl<F> View<F>
 where
     F: MyFloat
 {
-    pub fn new(win_size: PhysicalSize<u32>) -> Self
+    pub fn new<T>(fractal: &T, win_size: PhysicalSize<u32>) -> Self
+    where
+        T: Fractal
     {
+        let zoom = f!(START_ZOOM);
+        let phi = Complex::new(Float::atan(f!(2.0)), Float::atan(f!(0.0)));
+        let center = fractal.c_initial(f!(DONUT.start)..f!(DONUT.end), phi);
         Self {
             mouse_pos: None,
             win_center: Complex { re: f!(0.0), im: f!(0.0) },
             win_size,
-            zoom: f!(START_ZOOM),
-            center: Complex::new(Uniform::new(f!(1.5), f!(2)).unwrap().sample(&mut rand::rng()), F::zero()),
+            zoom,
+            center,
             rot: F::zero(),
-            phi: Complex { re: Float::atan(f!(2.0)), im: Float::atan(f!(0.0)) }
+            phi
         }
     }
 
@@ -70,11 +75,6 @@ where
         let f = |z| F::one() - Float::tan(z)/Float::cos(z);
 
         Complex::new(f(self.phi.re), f(self.phi.im))
-    }
-
-    pub fn update(&mut self, control: &mut ViewControl<F>)
-    {
-        control.update_view(self);
     }
     
     pub fn update_mouse_pos(&mut self, mouse_pos: PhysicalPosition<f64>)
@@ -107,9 +107,11 @@ where
         self.win_size = win_size
     }
 
-    pub fn reset(&mut self)
+    pub fn reset<T>(&mut self, fractal: &T)
+    where
+        T: Fractal
     {
-        *self = View::new(self.win_size)
+        *self = View::new(fractal, self.win_size)
     }
     
     pub fn win_size(&self) -> PhysicalSize<u32>

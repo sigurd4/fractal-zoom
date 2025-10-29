@@ -91,7 +91,7 @@ where
             [size.width as f32, size.height as f32]
         ]));*/
 
-        let view = View::new(size);
+        let view = View::new(&fractal, size);
 
         let global_uniforms = view.uniforms();
 
@@ -113,7 +113,7 @@ where
             })
         );
 
-        let render_pipeline = Z::setup_render_pipeline(&device, *surface_format);
+        let render_pipeline = fractal.setup_render_pipeline(&device, *surface_format);
         let vertices = core::array::from_fn::<_, 6, _>(|i| VertexInput { vertex_id: i as u32 });
 
         println!("Creating vertex buffer.");
@@ -152,7 +152,7 @@ where
 
     pub fn update(&mut self)
     {
-        self.view.update(&mut self.view_control);
+        self.view_control.update_view(&mut self.view, &self.fractal);
 
         // Update global uniforms with new frame size immediately
         let global_uniforms = self.view.uniforms();
@@ -247,7 +247,7 @@ where
                         None => Some(Fullscreen::Borderless(None))
                     }),
                     Action::Reset => {
-                        self.view.reset();
+                        self.view.reset(&self.fractal);
                         self.view_control.reset();
                     }
                 }

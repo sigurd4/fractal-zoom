@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 62c3325b7f2f1eea72479f449ba395d3ce16e4799876150cb32c01db77b6cd39
+// SourceHash: 85b3ead5a68d15421dd89a29cf9678313e4fac6f8bdf8395922cd53970bb69af
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -442,21 +442,32 @@ fn powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5: vec2<f32>, y: vec2<f32>) -
     return _e4;
 }
 
-fn colormap2_(z_1: vec2<f32>, i_1: u32) -> vec4<f32> {
+fn colormap3_(z_1: vec2<f32>, i_1: u32) -> vec4<f32> {
     let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
     let t = clamp((f32(i_1) / _e2), 0f, 1f);
-    let _e8 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_1);
-    let hue = ((f32(_e8) / 6.2831855f) + 0.5f);
-    let _e16 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, 0.5f, t));
-    return vec4<f32>(_e16, 1f);
+    let _e8 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_1);
+    let z_norm = (1f - exp(-(f32(_e8))));
+    let _e14 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_1);
+    let hue = ((f32(_e14) / 6.2831855f) + 0.5f);
+    let _e23 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, (z_norm / 2f), t));
+    return vec4<f32>(_e23, 0.8f);
 }
 
-fn colormap1_(z_2: vec2<f32>, i_2: u32) -> vec4<f32> {
-    let _e1 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_2);
-    let z_norm = f32(_e1);
-    let _e3 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_2);
-    let hue_1 = ((f32(_e3) / 6.2831855f) + 0.5f);
-    let _e13 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue_1, 0.5f, (z_norm % 1f)));
+fn colormap2_(z_2: vec2<f32>, i_2: u32) -> vec4<f32> {
+    let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let t_1 = clamp((f32(i_2) / _e2), 0f, 1f);
+    let _e8 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_2);
+    let hue_1 = ((f32(_e8) / 6.2831855f) + 0.5f);
+    let _e16 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue_1, 0.5f, t_1));
+    return vec4<f32>(_e16, 0.8f);
+}
+
+fn colormap1_(z_3: vec2<f32>, i_3: u32) -> vec4<f32> {
+    let _e1 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_3);
+    let z_norm_1 = f32(_e1);
+    let _e3 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_3);
+    let hue_2 = ((f32(_e3) / 6.2831855f) + 0.5f);
+    let _e13 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue_2, 0.5f, (z_norm_1 % 1f)));
     return vec4<f32>(_e13, 1f);
 }
 
@@ -489,29 +500,31 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     z = c_1;
     let _e36 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
     let n_1 = u32(_e36);
+    let _e38 = z;
+    let _e39 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e38);
     loop {
-        let _e39 = i;
-        let _e41 = z;
-        let _e42 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e41);
-        if ((_e39 < n_1) && (_e42 < 2f)) {
+        let _e41 = i;
+        let _e43 = z;
+        let _e44 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e43);
+        if ((_e41 < n_1) && (_e44 < (_e39 * 4f))) {
         } else {
             break;
         }
         {
-            let _e46 = z;
-            let _e49 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e50 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e46, _e49);
-            z = (_e50 + c_1);
+            let _e49 = z;
+            let _e52 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e53 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e49, _e52);
+            z = (_e53 + c_1);
         }
         continuing {
-            let _e53 = i;
-            i = (_e53 + 1u);
+            let _e56 = i;
+            i = (_e56 + 1u);
         }
     }
-    let _e55 = z;
-    let _e56 = i;
-    let _e57 = colormap2_(_e55, _e56);
-    return _e57;
+    let _e58 = z;
+    let _e59 = i;
+    let _e60 = colormap3_(_e58, _e59);
+    return _e60;
 }
 "#;
 }

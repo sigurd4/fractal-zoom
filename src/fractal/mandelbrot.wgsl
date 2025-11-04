@@ -1,4 +1,6 @@
-#import global_bindings::{GlobalUniforms, VertexInput, globals, norm_sqr, powc, norm, cis, cmul, dpowc, dnorm_sqr, dnorm, arg, darg, hsl2rgb, max_iterations};
+#import global_bindings::{GlobalUniforms, VertexInput, globals, max_iterations, view_radius, epsilon};
+#import colormap::colormap3;
+#import complex::{cmul, cis, norm_sqr, norm, powc}
 
 @vertex
 fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
@@ -17,52 +19,19 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
     let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
+
     let c = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
+    let c_norm_sqr = norm_sqr(c);
     var z = c;
-    var i: u32 = 0;
+    var dz = vec2(1.0, 0.0);
+    
     let n = u32(max_iterations());
-    let c_norm_sqr = norm_sqr(z);
+    var i: u32 = 0;
     for(; i < n && norm_sqr(z) < c_norm_sqr*4.0; i++)
     {
         z = (powc(z, globals.exp) + c);
+        dz = (powc(z, globals.exp - vec2(1.0, 0.0))*globals.exp + 1.0)*dz;
     }
 
     return colormap3(z, i);
-}
-
-fn colormap3(z: vec2<f32>, i: u32) -> vec4<f32>
-{
-    let t = clamp(f32(i)/max_iterations(), 0.0, 1.0);
-
-    let z_norm = 1.0 - exp(-f32(norm(z)));
-    let hue = f32(arg(z))/radians(360) + 0.5;
-
-    return vec4(
-        hsl2rgb(vec3(hue, z_norm/2.0, t)),
-        0.8
-    );
-}
-
-fn colormap2(z: vec2<f32>, i: u32) -> vec4<f32>
-{
-    let t = clamp(f32(i)/max_iterations(), 0.0, 1.0);
-
-    let hue = f32(arg(z))/radians(360) + 0.5;
-
-    return vec4(
-        hsl2rgb(vec3(hue, 0.5, t)),
-        0.8
-    );
-}
-
-fn colormap1(z: vec2<f32>, i: u32) -> vec4<f32>
-{
-    let z_norm = f32(norm(z));
-
-    let hue = f32(arg(z))/radians(360) + 0.5;
-
-    return vec4(
-        hsl2rgb(vec3(hue, 0.5, z_norm % 1.0)),
-        1.0
-    );
 }

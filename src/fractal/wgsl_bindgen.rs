@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 85b3ead5a68d15421dd89a29cf9678313e4fac6f8bdf8395922cd53970bb69af
+// SourceHash: ae7635d60efc58f9709c8043457646b220f2075833f282f156e0cef968368098
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -398,77 +398,59 @@ fn max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX() -> f32 {
     return (f32(_e2) * max(1f, log(_e6)));
 }
 
-fn hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(c: vec3<f32>) -> vec3<f32> {
+fn cisX_naga_oil_mod_XMNXW24DMMV4AX(rot: f32) -> vec2<f32> {
+    return vec2<f32>(cos(rot), sin(rot));
+}
+
+fn cmulX_naga_oil_mod_XMNXW24DMMV4AX(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32> {
+    return (mat2x2<f32>(vec2<f32>(lhs.x, lhs.y), vec2<f32>(-(lhs.y), lhs.x)) * rhs);
+}
+
+fn norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x: vec2<f32>) -> f32 {
+    return dot(x, x);
+}
+
+fn argX_naga_oil_mod_XMNXW24DMMV4AX(x_1: vec2<f32>) -> f32 {
+    return atan2(x_1.y, x_1.x);
+}
+
+fn clogX_naga_oil_mod_XMNXW24DMMV4AX(x_2: vec2<f32>) -> vec2<f32> {
+    let _e1 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x_2);
+    let _e5 = argX_naga_oil_mod_XMNXW24DMMV4AX(x_2);
+    return vec2<f32>((log(_e1) / 2f), _e5);
+}
+
+fn cexpX_naga_oil_mod_XMNXW24DMMV4AX(x_3: vec2<f32>) -> vec2<f32> {
+    let _e4 = cisX_naga_oil_mod_XMNXW24DMMV4AX(x_3.y);
+    return (exp(x_3.x) * _e4);
+}
+
+fn powcX_naga_oil_mod_XMNXW24DMMV4AX(x_4: vec2<f32>, y: vec2<f32>) -> vec2<f32> {
+    let _e1 = clogX_naga_oil_mod_XMNXW24DMMV4AX(x_4);
+    let _e3 = cmulX_naga_oil_mod_XMNXW24DMMV4AX(y, _e1);
+    let _e4 = cexpX_naga_oil_mod_XMNXW24DMMV4AX(_e3);
+    return _e4;
+}
+
+fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_5: vec2<f32>) -> f32 {
+    let _e1 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x_5);
+    return sqrt(_e1);
+}
+
+fn hsl2rgbX_naga_oil_mod_XMNXWY33SX(c: vec3<f32>) -> vec3<f32> {
     let rgb = clamp((abs((((vec3((c.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
     return (vec3(c.z) + ((c.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c.z) - 1f)))));
 }
 
-fn cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(rot: f32) -> vec2<f32> {
-    return vec2<f32>(cos(rot), sin(rot));
-}
-
-fn cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32> {
-    return (mat2x2<f32>(vec2<f32>(lhs.x, lhs.y), vec2<f32>(-(lhs.y), lhs.x)) * rhs);
-}
-
-fn norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x: vec2<f32>) -> f32 {
-    return dot(x, x);
-}
-
-fn normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_1: vec2<f32>) -> f32 {
-    let _e1 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_1);
-    return sqrt(_e1);
-}
-
-fn argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_2: vec2<f32>) -> f32 {
-    return atan2(x_2.y, x_2.x);
-}
-
-fn clogX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3: vec2<f32>) -> vec2<f32> {
-    let _e1 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3);
-    let _e5 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_3);
-    return vec2<f32>((log(_e1) / 2f), _e5);
-}
-
-fn cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4: vec2<f32>) -> vec2<f32> {
-    let _e4 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_4.y);
-    return (exp(x_4.x) * _e4);
-}
-
-fn powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5: vec2<f32>, y: vec2<f32>) -> vec2<f32> {
-    let _e1 = clogX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_5);
-    let _e3 = cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(y, _e1);
-    let _e4 = cexpX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e3);
-    return _e4;
-}
-
-fn colormap3_(z_1: vec2<f32>, i_1: u32) -> vec4<f32> {
+fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_1: u32) -> vec4<f32> {
     let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
     let t = clamp((f32(i_1) / _e2), 0f, 1f);
-    let _e8 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_1);
+    let _e8 = normX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
     let z_norm = (1f - exp(-(f32(_e8))));
-    let _e14 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_1);
+    let _e14 = argX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
     let hue = ((f32(_e14) / 6.2831855f) + 0.5f);
-    let _e23 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue, (z_norm / 2f), t));
+    let _e23 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(hue, (z_norm / 2f), t));
     return vec4<f32>(_e23, 0.8f);
-}
-
-fn colormap2_(z_2: vec2<f32>, i_2: u32) -> vec4<f32> {
-    let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
-    let t_1 = clamp((f32(i_2) / _e2), 0f, 1f);
-    let _e8 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_2);
-    let hue_1 = ((f32(_e8) / 6.2831855f) + 0.5f);
-    let _e16 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue_1, 0.5f, t_1));
-    return vec4<f32>(_e16, 0.8f);
-}
-
-fn colormap1_(z_3: vec2<f32>, i_3: u32) -> vec4<f32> {
-    let _e1 = normX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_3);
-    let z_norm_1 = f32(_e1);
-    let _e3 = argX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(z_3);
-    let hue_2 = ((f32(_e3) / 6.2831855f) + 0.5f);
-    let _e13 = hsl2rgbX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(vec3<f32>(hue_2, 0.5f, (z_norm_1 % 1f)));
-    return vec4<f32>(_e13, 1f);
 }
 
 @vertex 
@@ -486,45 +468,51 @@ fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin
 @fragment 
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     var z: vec2<f32>;
+    var dz: vec2<f32> = vec2<f32>(1f, 0f);
     var i: u32 = 0u;
 
-    let _e9 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
-    let _e14 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
-    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e9), f32(_e14)) / vec2(2f)));
-    let _e23 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
-    let _e28 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
-    let _e29 = cisX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e28);
-    let _e30 = cmulX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((pos_1 / vec2(_e23)), _e29);
-    let _e33 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
-    let c_1 = (_e30 - _e33);
+    let _e12 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e17 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e12), f32(_e17)) / vec2(2f)));
+    let _e26 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e31 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e32 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e31);
+    let _e33 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e26)), _e32);
+    let _e36 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    let c_1 = (_e33 - _e36);
+    let _e38 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(c_1);
     z = c_1;
-    let _e36 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
-    let n_1 = u32(_e36);
-    let _e38 = z;
-    let _e39 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e38);
+    let _e40 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let n_1 = u32(_e40);
     loop {
-        let _e41 = i;
-        let _e43 = z;
-        let _e44 = norm_sqrX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e43);
-        if ((_e41 < n_1) && (_e44 < (_e39 * 4f))) {
+        let _e43 = i;
+        let _e45 = z;
+        let _e46 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e45);
+        if ((_e43 < n_1) && (_e46 < (_e38 * 4f))) {
         } else {
             break;
         }
         {
-            let _e49 = z;
-            let _e52 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e53 = powcX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e49, _e52);
-            z = (_e53 + c_1);
+            let _e51 = z;
+            let _e54 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e55 = powcX_naga_oil_mod_XMNXW24DMMV4AX(_e51, _e54);
+            z = (_e55 + c_1);
+            let _e57 = z;
+            let _e60 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e65 = powcX_naga_oil_mod_XMNXW24DMMV4AX(_e57, (_e60 - vec2<f32>(1f, 0f)));
+            let _e68 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e74 = dz;
+            dz = (((_e65 * _e68) + vec2(1f)) * _e74);
         }
         continuing {
-            let _e56 = i;
-            i = (_e56 + 1u);
+            let _e77 = i;
+            i = (_e77 + 1u);
         }
     }
-    let _e58 = z;
-    let _e59 = i;
-    let _e60 = colormap3_(_e58, _e59);
-    return _e60;
+    let _e79 = z;
+    let _e80 = i;
+    let _e81 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e79, _e80);
+    return _e81;
 }
 "#;
 }

@@ -183,7 +183,7 @@ where
 
         if let Some(dc) = fractal.dc_newton(view.win_center/view.zoom - view.center, view.phi)
         {
-            view.win_center += dc*f!(ZOOM_MU)*view.zoom;
+            //view.win_center += dc*f!(ZOOM_MU)*view.zoom;
         }
 
         let prev_phi = view.phi;

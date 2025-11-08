@@ -68,59 +68,83 @@ where
         }
     }
 
-    pub fn accel_center(&mut self, direction: MoveDirection)
+    pub fn accel_center(&mut self, direction: Option<MoveDirection>)
     {
-        let dst = match direction.axis()
-        {
-            false => &mut self.center_vel.re,
-            true => &mut self.center_vel.im
-        };
-        let accel = f!(MOVE_CENTER_ACCEL);
-        match direction.forward()
-        {
-            false => *dst -= accel,
-            true => *dst += accel
-        }
-    }
-
-    pub fn accel_phi(&mut self, direction: MoveDirection)
-    {
-        let dst = match direction.axis()
-        {
-            false => &mut self.phi_vel.re,
-            true => &mut self.phi_vel.im
-        };
-        let accel = f!(MOVE_EXP_ACCEL);
-        match direction.forward()
-        {
-            false => *dst -= accel,
-            true => *dst += accel
-        }
-    }
-
-    pub fn accel_zoom(&mut self, direction: ZoomDirection, accel: Option<F>, _view: &View<F>)
-    {
-        let accel = Float::powf(f!(ZOOM_MUL), accel.unwrap_or(f!(MOVE_ZOOM_ACCEL)));
         match direction
         {
-            ZoomDirection::Outwards => {
-                self.zoom_vel /= accel;
-                //self.center_vel += (view.win_center/accel - view.win_center)/view.zoom
+            Some(direction) => {
+                let dst = match direction.axis()
+                {
+                    false => &mut self.center_vel.re,
+                    true => &mut self.center_vel.im
+                };
+                let accel = f!(MOVE_CENTER_ACCEL);
+                match direction.forward()
+                {
+                    false => *dst -= accel,
+                    true => *dst += accel
+                }
             },
-            ZoomDirection::Inwards => {
-                self.zoom_vel *= accel;
-                //self.center_vel += (view.win_center*accel - view.win_center)/view.zoom
-            }
+            None => self.center_vel = Complex::zero()
         }
     }
 
-    pub fn accel_rot(&mut self, direction: RotateDirection)
+    pub fn accel_phi(&mut self, direction: Option<MoveDirection>)
     {
-        let accel = f!(ROT_ACCEL);
         match direction
         {
-            RotateDirection::Left => self.rot_vel -= accel,
-            RotateDirection::Right => self.rot_vel += accel
+            Some(direction) => {
+                let dst = match direction.axis()
+                {
+                    false => &mut self.phi_vel.re,
+                    true => &mut self.phi_vel.im
+                };
+                let accel = f!(MOVE_EXP_ACCEL);
+                match direction.forward()
+                {
+                    false => *dst -= accel,
+                    true => *dst += accel
+                }
+            },
+            None => self.phi_vel = Complex::zero()
+        }
+    }
+
+    pub fn accel_zoom(&mut self, direction: Option<ZoomDirection>, accel: Option<F>, _view: &View<F>)
+    {
+        match direction
+        {
+            Some(direction) => {
+                let accel = Float::powf(f!(ZOOM_MUL), accel.unwrap_or(f!(MOVE_ZOOM_ACCEL)));
+                match direction
+                {
+                    ZoomDirection::Outwards => {
+                        self.zoom_vel /= accel;
+                        //self.center_vel += (view.win_center/accel - view.win_center)/view.zoom
+                    },
+                    ZoomDirection::Inwards => {
+                        self.zoom_vel *= accel;
+                        //self.center_vel += (view.win_center*accel - view.win_center)/view.zoom
+                    }
+                }
+            },
+            None => self.zoom_vel = F::one()
+        }
+    }
+
+    pub fn accel_rot(&mut self, direction: Option<RotateDirection>)
+    {
+        match direction
+        {
+            Some(direction) => {
+                let accel = f!(ROT_ACCEL);
+                match direction
+                {
+                    RotateDirection::Left => self.rot_vel -= accel,
+                    RotateDirection::Right => self.rot_vel += accel
+                }
+            },
+            None => self.rot_vel = F::zero()
         }
     }
 

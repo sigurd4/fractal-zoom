@@ -8,7 +8,8 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ShaderEntry
 {
-    Mandelbrot
+    Mandelbrot,
+    Julia
 }
 impl ShaderEntry
 {
@@ -16,7 +17,8 @@ impl ShaderEntry
     {
         match self
         {
-            Self::Mandelbrot => mandelbrot::create_pipeline_layout(device)
+            Self::Mandelbrot => mandelbrot::create_pipeline_layout(device),
+            Self::Julia => julia::create_pipeline_layout(device)
         }
     }
 
@@ -24,7 +26,8 @@ impl ShaderEntry
     {
         match self
         {
-            Self::Mandelbrot => mandelbrot::create_shader_module_embed_source(device)
+            Self::Mandelbrot => mandelbrot::create_shader_module_embed_source(device),
+            Self::Julia => julia::create_shader_module_embed_source(device)
         }
     }
 }

@@ -40,7 +40,7 @@ const MOVE_CENTER_ACCEL: f64 = 1.0;
 const MOVE_EXP_ACCEL: f64 = 1.0;
 const MOVE_ZOOM_ACCEL: f64 = 1.0;
 
-const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip()*1e2;
+const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip();
 const ZOOM_MUL: f64 = 0.995;
 const MAX_ITERATIONS: u32 = 16;
 
@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
 
-    let fractal = Mandelbrot;
+    let fractal = fractal::Mandelbrot;
     
     let mut app = App::<f64, _, _>::new(move || fractal);
 

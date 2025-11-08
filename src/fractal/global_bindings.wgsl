@@ -1,34 +1,37 @@
-struct GlobalUniforms {
-    window_size: vec2<u32>,
-    max_iterations: u32,
-    center: vec2<f32>,
-    zoom: f32,
-    rot: f32,
-    exp: vec2<f32>
-};
+#import global_bindings::{GlobalUniforms, VertexInput, globals, max_iterations, view_radius, epsilon};
+#import colormap::colormap3;
+#import complex::{cmul, cis, norm_sqr, norm, powc, croot}
 
-struct VertexInput {
-    @builtin(vertex_index) vertex_index: u32,
-    @location(0) vertex_id: u32
-};
+@vertex
+fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
+{
+    let corner = in.vertex_index % 3;
+    let n = in.vertex_index/3 % 2 == 1;
+    let pos = vec2(
+        f32(u32(corner == 1 || (corner == 0 && n))*globals.window_size.x) - f32(globals.window_size.x)/2.0,
+        f32(u32(corner == 2 || (corner == 0 && n))*globals.window_size.y) - f32(globals.window_size.y)/2.0
+    );
 
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) c: vec2<f32>
+    return vec4<f32>(pos, 0.0, 1.0);
 }
 
-@group(0) @binding(0)
-var<uniform> globals: GlobalUniforms;
+@fragment
+fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
+{
+    let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
 
-fn max_iterations() -> f32
-{
-    return f32(globals.max_iterations)*max(1.0, log(globals.zoom));
-}
-fn view_radius() -> f32
-{
-    return 100.0;
-}
-fn epsilon() -> f32
-{
-    return 0.00000000001;
+    let c = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
+    let c_norm_sqr = norm_sqr(c);
+    var z = c;
+    var dz = vec2(1.0, 0.0);
+    
+    let n = u32(max_iterations());
+    var i: u32 = 0;
+    for(; i < n && norm_sqr(z) < c_norm_sqr*4.0; i++)
+    {
+        z = (powc(z, globals.exp) + c);
+        dz = (powc(z, globals.exp - vec2(1.0, 0.0))*globals.exp + 1.0)*dz;
+    }
+
+    return colormap3(z, i);
 }

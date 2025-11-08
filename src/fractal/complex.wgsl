@@ -86,3 +86,16 @@ fn dpowc(x: vec2<f64>, y: vec2<f64>) -> vec2<f64>
 {
     return dcexp(dcmul(y, dclog(x)));
 }
+
+fn croot(c: vec2<f32>) -> vec2<f32>
+{
+    var b = bitcast<vec2<u32>>(c);
+    let mask = u32(1) << 31;
+    
+    for(var i = u32(0); i < 32; i++)
+    {
+        b.y ^= mask & ((b.x << i) ^ (b.y << i));
+    }
+    return bitcast<vec2<f32>>(b);
+    return c;
+}

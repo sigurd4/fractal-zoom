@@ -5,6 +5,7 @@ moddef::moddef!(
         wgsl_bindgen
     },
     flat(pub) mod {
+        julia,
         mandelbrot
     }
 );

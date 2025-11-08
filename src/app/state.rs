@@ -194,10 +194,10 @@ where
                     MoveExp(MoveDirection),
                     Rotate(RotateDirection),
                     
-                    AccelCenter(MoveDirection),
-                    AccelExp(MoveDirection),
-                    AccelZoom(ZoomDirection),
-                    AccelRotate(RotateDirection),
+                    AccelCenter(Option<MoveDirection>),
+                    AccelExp(Option<MoveDirection>),
+                    AccelZoom(Option<ZoomDirection>),
+                    AccelRotate(Option<RotateDirection>),
 
                     Reverse,
                     Idle,
@@ -262,6 +262,7 @@ where
                 match (button, state)
                 {
                     (MouseButton::Left, ElementState::Pressed) => self.view.recenter(),
+                    (MouseButton::Middle, ElementState::Pressed) => self.view_control.accel_zoom(None, None, &self.view),
                     _ => ()
                 }
             },
@@ -273,7 +274,7 @@ where
                         MouseScrollDelta::LineDelta(x, y) => y as f64,
                         MouseScrollDelta::PixelDelta(PhysicalPosition {x, y}) => y
                     };
-                    self.view_control.accel_zoom(ZoomDirection::Inwards, Some(f!(accel)), &self.view);
+                    self.view_control.accel_zoom(Some(ZoomDirection::Inwards), Some(f!(accel)), &self.view);
                 }
             },
             WindowEvent::CursorMoved { position, device_id: _ } => {

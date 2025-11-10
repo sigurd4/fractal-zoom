@@ -46,6 +46,7 @@ const MAX_ITERATIONS: u32 = 16;
 
 pub trait MyFloat = Float + FloatConst + FloatCore + ComplexFloat + NumAssignOps + SampleUniform + Display + Debug;
 
+
 fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;

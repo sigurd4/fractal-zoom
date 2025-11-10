@@ -51,7 +51,7 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
 
-    let fractal = fractal::Mandelbrot;
+    let fractal = fractal::Pendulum;
     
     let mut app = App::<f64, _, _>::new(move || fractal);
 

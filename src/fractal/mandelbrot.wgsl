@@ -21,17 +21,16 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
 
     let c = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
-    let c_norm_sqr = norm_sqr(c);
+    let r = norm_sqr(c);
     var z = c;
-    var dz = vec2(1.0, 0.0);
     
     let n = u32(max_iterations());
     var i: u32 = 0;
-    for(; i < n && norm_sqr(z) < c_norm_sqr*4.0; i++)
+    for(; i < n && norm_sqr(z) < r*4.0; i++)
     {
         z = (powc(z, globals.exp) + c);
-        dz = (powc(z, globals.exp - vec2(1.0, 0.0))*globals.exp + 1.0)*dz;
     }
+    let m = f32(i);// - log(log(norm(z)))/log(globals.exp);
 
-    return colormap3(z, i);
+    return colormap3(z, m);
 }

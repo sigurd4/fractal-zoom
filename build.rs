@@ -7,6 +7,7 @@ fn main() -> miette::Result<()>
         .workspace_root("src/fractal")
         .add_entry_point("src/fractal/mandelbrot.wgsl")
         .add_entry_point("src/fractal/julia.wgsl")
+        .add_entry_point("src/fractal/pendulum.wgsl")
         .serialization_strategy(WgslTypeSerializeStrategy::Bytemuck)
         .emit_rerun_if_change(true)
         //.shader_source_type(WgslShaderSourceType::ComposerWithRelativePath)

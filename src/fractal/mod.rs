@@ -6,7 +6,8 @@ moddef::moddef!(
     },
     flat(pub) mod {
         julia,
-        mandelbrot
+        mandelbrot,
+        pendulum
     }
 );
 

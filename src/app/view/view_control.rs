@@ -33,7 +33,7 @@ where
         Self {
             center_vel: Complex::zero(),
             phi_vel: Complex::zero(),
-            zoom_vel: f!(ZOOM_MUL),
+            zoom_vel: F::one(),
             rot_vel: F::zero(),
             center_move: [None; 2],
             phi_move: [None; 2],

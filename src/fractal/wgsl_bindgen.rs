@@ -2,14 +2,15 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 236d16e17d049c80e8d549ab8d54af4fedc0e09fbd9d7c0d09277850ea9299cc
+// SourceHash: cec85844518d65dea55d6f2c6eea43b5993417ddbcebf8822506fa3d32abea94
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ShaderEntry
 {
     Mandelbrot,
-    Julia
+    Julia,
+    Pendulum
 }
 impl ShaderEntry
 {
@@ -18,7 +19,8 @@ impl ShaderEntry
         match self
         {
             Self::Mandelbrot => mandelbrot::create_pipeline_layout(device),
-            Self::Julia => julia::create_pipeline_layout(device)
+            Self::Julia => julia::create_pipeline_layout(device),
+            Self::Pendulum => pendulum::create_pipeline_layout(device)
         }
     }
 
@@ -27,7 +29,8 @@ impl ShaderEntry
         match self
         {
             Self::Mandelbrot => mandelbrot::create_shader_module_embed_source(device),
-            Self::Julia => julia::create_shader_module_embed_source(device)
+            Self::Julia => julia::create_shader_module_embed_source(device),
+            Self::Pendulum => pendulum::create_shader_module_embed_source(device)
         }
     }
 }
@@ -275,6 +278,11 @@ pub mod bytemuck_impls
     unsafe impl bytemuck::Zeroable for global_bindings::GlobalUniforms {}
     unsafe impl bytemuck::Pod for global_bindings::GlobalUniforms {}
 }
+pub mod consts
+{
+    use super::{_root, _root::*};
+    pub const TAU: f32 = 6.2831855f32;
+}
 pub mod mandelbrot
 {
     use super::{_root, _root::*};
@@ -392,6 +400,8 @@ struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
     exp: vec2<f32>,
 }
 
+const TAUX_naga_oil_mod_XMNXW443UOMX: f32 = 6.2831855f;
+
 @group(0) @binding(0) 
 var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
 
@@ -435,25 +445,25 @@ fn powcX_naga_oil_mod_XMNXW24DMMV4AX(x_4: vec2<f32>, y: vec2<f32>) -> vec2<f32> 
     return _e4;
 }
 
-fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_5: vec2<f32>) -> f32 {
-    let _e1 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x_5);
-    return sqrt(_e1);
-}
-
 fn hsl2rgbX_naga_oil_mod_XMNXWY33SX(c: vec3<f32>) -> vec3<f32> {
     let rgb = clamp((abs((((vec3((c.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
     return (vec3(c.z) + ((c.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c.z) - 1f)))));
 }
 
-fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_1: u32) -> vec4<f32> {
-    let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
-    let t = clamp((f32(i_1) / _e2), 0f, 1f);
-    let _e8 = normX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
-    let z_norm = (1f - exp(-(f32(_e8))));
-    let _e14 = argX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
-    let hue = ((f32(_e14) / 6.2831855f) + 0.5f);
-    let _e23 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(hue, (z_norm / 2f), t));
-    return vec4<f32>(_e23, 0.8f);
+fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_5: vec2<f32>) -> f32 {
+    let _e1 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x_5);
+    return sqrt(_e1);
+}
+
+fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_1: f32) -> vec4<f32> {
+    let _e0 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let t = clamp((i_1 / _e0), 0f, 1f);
+    let _e7 = normX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
+    let z_norm = (1f - exp(-(f32(_e7))));
+    let _e13 = argX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
+    let hue = ((f32(_e13) / 6.2831855f) + 0.5f);
+    let _e22 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(hue, (z_norm / 2f), t));
+    return vec4<f32>(_e22, 0.8f);
 }
 
 @vertex 
@@ -471,51 +481,45 @@ fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin
 @fragment 
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     var z: vec2<f32>;
-    var dz: vec2<f32> = vec2<f32>(1f, 0f);
     var i: u32 = 0u;
 
-    let _e12 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
-    let _e17 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
-    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e12), f32(_e17)) / vec2(2f)));
-    let _e26 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
-    let _e31 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
-    let _e32 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e31);
-    let _e33 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e26)), _e32);
-    let _e36 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
-    let c_1 = (_e33 - _e36);
-    let _e38 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(c_1);
+    let _e9 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e14 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e9), f32(_e14)) / vec2(2f)));
+    let _e23 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e28 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e29 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e28);
+    let _e30 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e23)), _e29);
+    let _e33 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    let c_1 = (_e30 - _e33);
+    let _e35 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(c_1);
     z = c_1;
-    let _e40 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
-    let n_1 = u32(_e40);
+    let _e37 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let n_1 = u32(_e37);
     loop {
-        let _e43 = i;
-        let _e45 = z;
-        let _e46 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e45);
-        if ((_e43 < n_1) && (_e46 < (_e38 * 4f))) {
+        let _e40 = i;
+        let _e42 = z;
+        let _e43 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e42);
+        if ((_e40 < n_1) && (_e43 < (_e35 * 4f))) {
         } else {
             break;
         }
         {
-            let _e51 = z;
-            let _e54 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e55 = powcX_naga_oil_mod_XMNXW24DMMV4AX(_e51, _e54);
-            z = (_e55 + c_1);
-            let _e57 = z;
-            let _e60 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e65 = powcX_naga_oil_mod_XMNXW24DMMV4AX(_e57, (_e60 - vec2<f32>(1f, 0f)));
-            let _e68 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-            let _e74 = dz;
-            dz = (((_e65 * _e68) + vec2(1f)) * _e74);
+            let _e48 = z;
+            let _e51 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e52 = powcX_naga_oil_mod_XMNXW24DMMV4AX(_e48, _e51);
+            z = (_e52 + c_1);
         }
         continuing {
-            let _e77 = i;
-            i = (_e77 + 1u);
+            let _e55 = i;
+            i = (_e55 + 1u);
         }
     }
-    let _e79 = z;
-    let _e80 = i;
-    let _e81 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e79, _e80);
-    return _e81;
+    let _e57 = i;
+    let m = f32(_e57);
+    let _e59 = z;
+    let _e60 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e59, m);
+    return _e60;
 }
 "#;
 }
@@ -636,6 +640,8 @@ struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
     exp: vec2<f32>,
 }
 
+const TAUX_naga_oil_mod_XMNXW443UOMX: f32 = 6.2831855f;
+
 @group(0) @binding(0) 
 var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
 
@@ -679,33 +685,9 @@ fn powcX_naga_oil_mod_XMNXW24DMMV4AX(x_4: vec2<f32>, y: vec2<f32>) -> vec2<f32> 
     return _e4;
 }
 
-fn crootX_naga_oil_mod_XMNXW24DMMV4AX(c: vec2<f32>) -> vec2<f32> {
-    var b: vec2<u32>;
-    var i_1: u32 = 0u;
-
-    b = bitcast<vec2<u32>>(c);
-    loop {
-        let _e5 = i_1;
-        if (_e5 < 32u) {
-        } else {
-            break;
-        }
-        {
-            let _e11 = b.x;
-            let _e12 = i_1;
-            let _e15 = b.y;
-            let _e16 = i_1;
-            let _e20 = b.y;
-            b.y = (_e20 ^ (2147483648u & ((_e11 << _e12) ^ (_e15 << _e16))));
-        }
-        continuing {
-            let _e23 = i_1;
-            i_1 = (_e23 + 1u);
-        }
-    }
-    let _e25 = b;
-    return bitcast<vec2<f32>>(_e25);
-    return c;
+fn hsl2rgbX_naga_oil_mod_XMNXWY33SX(c_1: vec3<f32>) -> vec3<f32> {
+    let rgb = clamp((abs((((vec3((c_1.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
+    return (vec3(c_1.z) + ((c_1.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c_1.z) - 1f)))));
 }
 
 fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_5: vec2<f32>) -> f32 {
@@ -713,20 +695,15 @@ fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_5: vec2<f32>) -> f32 {
     return sqrt(_e1);
 }
 
-fn hsl2rgbX_naga_oil_mod_XMNXWY33SX(c_1: vec3<f32>) -> vec3<f32> {
-    let rgb = clamp((abs((((vec3((c_1.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
-    return (vec3(c_1.z) + ((c_1.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c_1.z) - 1f)))));
-}
-
-fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_2: u32) -> vec4<f32> {
-    let _e2 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
-    let t = clamp((f32(i_2) / _e2), 0f, 1f);
-    let _e8 = normX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
-    let z_norm = (1f - exp(-(f32(_e8))));
-    let _e14 = argX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
-    let hue = ((f32(_e14) / 6.2831855f) + 0.5f);
-    let _e23 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(hue, (z_norm / 2f), t));
-    return vec4<f32>(_e23, 0.8f);
+fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_1: f32) -> vec4<f32> {
+    let _e0 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let t = clamp((i_1 / _e0), 0f, 1f);
+    let _e7 = normX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
+    let z_norm = (1f - exp(-(f32(_e7))));
+    let _e13 = argX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
+    let hue = ((f32(_e13) / 6.2831855f) + 0.5f);
+    let _e22 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(hue, (z_norm / 2f), t));
+    return vec4<f32>(_e22, 0.8f);
 }
 
 @vertex 
@@ -743,59 +720,341 @@ fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin
 
 @fragment 
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
-    var exp_inv: vec2<f32>;
     var z: vec2<f32>;
-    var dz: vec2<f32> = vec2<f32>(1f, 0f);
+    var c: vec2<f32>;
     var i: u32 = 0u;
 
-    let _e12 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
-    let _e17 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
-    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e12), f32(_e17)) / vec2(2f)));
-    let _e26 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
-    let _e31 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
-    let _e32 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e31);
-    let _e33 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e26)), _e32);
-    let _e36 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
-    let c_2 = (_e33 - _e36);
-    let _e38 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(c_2);
-    let _e41 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-    exp_inv = (vec2(1f) / _e41);
-    let _e47 = exp_inv;
-    let _e48 = powcX_naga_oil_mod_XMNXW24DMMV4AX(-(c_2), _e47);
-    let _e49 = crootX_naga_oil_mod_XMNXW24DMMV4AX(_e48);
-    z = _e49;
-    let _e51 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
-    let n_1 = u32(_e51);
+    let _e9 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e14 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e9), f32(_e14)) / vec2(2f)));
+    let _e23 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e28 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e29 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e28);
+    let _e30 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e23)), _e29);
+    let _e33 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    z = (_e30 - _e33);
+    let _e36 = z;
+    let _e37 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e36);
+    let _e40 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+    c = _e40;
+    let _e42 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let n_1 = u32(_e42);
     loop {
-        let _e54 = i;
-        let _e56 = z;
-        let _e57 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e56);
-        if ((_e54 < n_1) && (_e57 < (_e38 * 4f))) {
+        let _e45 = i;
+        let _e47 = z;
+        let _e48 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e47);
+        if ((_e45 < n_1) && (_e48 < (_e37 * 4f))) {
         } else {
             break;
         }
         {
-            let _e62 = z;
-            let _e64 = exp_inv;
-            let _e65 = powcX_naga_oil_mod_XMNXW24DMMV4AX((_e62 - c_2), _e64);
-            z = _e65;
-            let _e67 = dz;
-            let _e68 = exp_inv;
-            let _e70 = exp_inv;
-            let _e71 = z;
-            let _e73 = exp_inv;
-            let _e78 = powcX_naga_oil_mod_XMNXW24DMMV4AX((_e71 - c_2), (vec2<f32>(1f, 0f) - _e73));
-            dz = ((_e67 * _e68) / (_e70 - _e78));
+            let _e53 = z;
+            let _e56 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+            let _e57 = powcX_naga_oil_mod_XMNXW24DMMV4AX(_e53, _e56);
+            let _e58 = c;
+            z = (_e57 + _e58);
         }
         continuing {
-            let _e82 = i;
-            i = (_e82 + 1u);
+            let _e61 = i;
+            i = (_e61 + 1u);
         }
     }
-    let _e84 = z;
-    let _e85 = i;
-    let _e86 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e84, _e85);
-    return _e86;
+    let _e63 = i;
+    let m = f32(_e63);
+    let _e65 = z;
+    let _e66 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e65, m);
+    return _e66;
+}
+"#;
+}
+pub mod pendulum
+{
+    use super::{_root, _root::*};
+    pub const G: f32 = 9.8f32;
+    pub const T: f32 = 10f32;
+    pub const SCALE: f32 = 1f32;
+    pub const ENTRY_VS_MAIN: &str = "vs_main";
+    pub const ENTRY_FS_MAIN: &str = "fs_main";
+    #[derive(Debug)]
+    pub struct VertexEntry<const N: usize>
+    {
+        pub entry_point: &'static str,
+        pub buffers: [wgpu::VertexBufferLayout<'static>; N],
+        pub constants: Vec<(&'static str, f64)>
+    }
+    pub fn vertex_state<'a, const N: usize>(module: &'a wgpu::ShaderModule, entry: &'a VertexEntry<N>) -> wgpu::VertexState<'a>
+    {
+        wgpu::VertexState {
+            module,
+            entry_point: Some(entry.entry_point),
+            buffers: &entry.buffers,
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &entry.constants,
+                ..Default::default()
+            }
+        }
+    }
+    pub fn vs_main_entry(vertex_input: wgpu::VertexStepMode) -> VertexEntry<1>
+    {
+        VertexEntry {
+            entry_point: ENTRY_VS_MAIN,
+            buffers: [global_bindings::VertexInput::vertex_buffer_layout(vertex_input)],
+            constants: Default::default()
+        }
+    }
+    #[derive(Debug)]
+    pub struct FragmentEntry<const N: usize>
+    {
+        pub entry_point: &'static str,
+        pub targets: [Option<wgpu::ColorTargetState>; N],
+        pub constants: Vec<(&'static str, f64)>
+    }
+    pub fn fragment_state<'a, const N: usize>(module: &'a wgpu::ShaderModule, entry: &'a FragmentEntry<N>) -> wgpu::FragmentState<'a>
+    {
+        wgpu::FragmentState {
+            module,
+            entry_point: Some(entry.entry_point),
+            targets: &entry.targets,
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &entry.constants,
+                ..Default::default()
+            }
+        }
+    }
+    pub fn fs_main_entry(targets: [Option<wgpu::ColorTargetState>; 1]) -> FragmentEntry<1>
+    {
+        FragmentEntry {
+            entry_point: ENTRY_FS_MAIN,
+            targets,
+            constants: Default::default()
+        }
+    }
+    #[doc = " Bind groups can be set individually using their set(render_pass) method, or all at once using `WgpuBindGroups::set`."]
+    #[doc = " For optimal performance with many draw calls, it's recommended to organize bindings into bind groups based on update frequency:"]
+    #[doc = "   - Bind group 0: Least frequent updates (e.g. per frame resources)"]
+    #[doc = "   - Bind group 1: More frequent updates"]
+    #[doc = "   - Bind group 2: More frequent updates"]
+    #[doc = "   - Bind group 3: Most frequent updates (e.g. per draw resources)"]
+    #[derive(Debug, Copy, Clone)]
+    pub struct WgpuBindGroups<'a>
+    {
+        pub bind_group0: &'a global_bindings::WgpuBindGroup0
+    }
+    impl<'a> WgpuBindGroups<'a>
+    {
+        pub fn set(&self, pass: &mut impl SetBindGroup)
+        {
+            self.bind_group0.set(pass);
+        }
+    }
+    #[derive(Debug)]
+    pub struct WgpuPipelineLayout;
+    impl WgpuPipelineLayout
+    {
+        pub fn bind_group_layout_entries(entries: [wgpu::BindGroupLayout; 1]) -> [wgpu::BindGroupLayout; 1]
+        {
+            entries
+        }
+    }
+    pub fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout
+    {
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Pendulum::PipelineLayout"),
+            bind_group_layouts: &[&global_bindings::WgpuBindGroup0::get_bind_group_layout(device)],
+            push_constant_ranges: &[]
+        })
+    }
+    pub fn create_shader_module_embed_source(device: &wgpu::Device) -> wgpu::ShaderModule
+    {
+        let source = std::borrow::Cow::Borrowed(SHADER_STRING);
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("pendulum.wgsl"),
+            source: wgpu::ShaderSource::Wgsl(source)
+        })
+    }
+    pub const SHADER_STRING: &str = r#"
+struct VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
+    @builtin(vertex_index) vertex_index: u32,
+    @location(0) @interpolate(flat) vertex_id: u32,
+}
+
+struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
+    window_size: vec2<u32>,
+    max_iterations: u32,
+    center: vec2<f32>,
+    zoom: f32,
+    rot: f32,
+    exp: vec2<f32>,
+}
+
+struct PendulumState {
+    theta1_: f32,
+    theta2_: f32,
+    p1_: f32,
+    p2_: f32,
+}
+
+struct Derivatives {
+    dtheta1_: f32,
+    dtheta2_: f32,
+    dp1_: f32,
+    dp2_: f32,
+}
+
+const TAUX_naga_oil_mod_XMNXW443UOMX: f32 = 6.2831855f;
+const G: f32 = 9.8f;
+const T: f32 = 10f;
+const SCALE: f32 = 1f;
+
+@group(0) @binding(0) 
+var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
+
+fn max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX() -> f32 {
+    let _e2 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.max_iterations;
+    let _e6 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    return (f32(_e2) * max(1f, log(_e6)));
+}
+
+fn cisX_naga_oil_mod_XMNXW24DMMV4AX(rot: f32) -> vec2<f32> {
+    return vec2<f32>(cos(rot), sin(rot));
+}
+
+fn cmulX_naga_oil_mod_XMNXW24DMMV4AX(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32> {
+    return (mat2x2<f32>(vec2<f32>(lhs.x, lhs.y), vec2<f32>(-(lhs.y), lhs.x)) * rhs);
+}
+
+fn hsl2rgbX_naga_oil_mod_XMNXWY33SX(c: vec3<f32>) -> vec3<f32> {
+    let rgb = clamp((abs((((vec3((c.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
+    return (vec3(c.z) + ((c.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c.z) - 1f)))));
+}
+
+fn norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x: vec2<f32>) -> f32 {
+    return dot(x, x);
+}
+
+fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_1: vec2<f32>) -> f32 {
+    let _e1 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x_1);
+    return sqrt(_e1);
+}
+
+fn argX_naga_oil_mod_XMNXW24DMMV4AX(x_2: vec2<f32>) -> f32 {
+    return atan2(x_2.y, x_2.x);
+}
+
+fn wrapX_naga_oil_mod_XMNXWY33SNVQXAX(x_3: f32) -> f32 {
+    return (((x_3 % 1f) + 1f) % 1f);
+}
+
+fn colormap4X_naga_oil_mod_XMNXWY33SNVQXAX(z: vec2<f32>) -> vec4<f32> {
+    let _e6 = wrapX_naga_oil_mod_XMNXWY33SNVQXAX(((z.x / TAUX_naga_oil_mod_XMNXW443UOMX) + 0.25f));
+    let light = (0.25f + (_e6 * 0.5f));
+    let _e14 = wrapX_naga_oil_mod_XMNXWY33SNVQXAX((z.y / TAUX_naga_oil_mod_XMNXW443UOMX));
+    let _e17 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(_e14, 0.5f, light));
+    return vec4<f32>(_e17, 0.8f);
+}
+
+fn compute_derivatives(state_1: PendulumState) -> Derivatives {
+    var der: Derivatives = Derivatives();
+
+    let theta1_ = state_1.theta1_;
+    let theta2_ = state_1.theta2_;
+    let p1_ = state_1.p1_;
+    let p2_ = state_1.p2_;
+    let delta = (theta1_ - theta2_);
+    let cos_delta = cos(delta);
+    let sin_delta = sin(delta);
+    let denominator = (16f - ((9f * cos_delta) * cos_delta));
+    let coeff = (6f / denominator);
+    let dtheta1_ = (coeff * ((2f * p1_) - ((3f * cos_delta) * p2_)));
+    let dtheta2_ = (coeff * ((8f * p2_) - ((3f * cos_delta) * p1_)));
+    let endbit = ((dtheta1_ * dtheta2_) * sin_delta);
+    let dp1_ = (-0.5f * ((29.400002f * sin(theta1_)) + endbit));
+    let dp2_ = (-0.5f * ((G * sin(theta2_)) - endbit));
+    der.dtheta1_ = dtheta1_;
+    der.dtheta2_ = dtheta2_;
+    der.dp1_ = dp1_;
+    der.dp2_ = dp2_;
+    let _e48 = der;
+    return _e48;
+}
+
+fn rk4_step(state_2: PendulumState, dt: f32) -> PendulumState {
+    var newState: PendulumState = PendulumState();
+
+    let _e2 = compute_derivatives(state_2);
+    let s2_ = PendulumState((state_2.theta1_ + ((0.5f * dt) * _e2.dtheta1_)), (state_2.theta2_ + ((0.5f * dt) * _e2.dtheta2_)), (state_2.p1_ + ((0.5f * dt) * _e2.dp1_)), (state_2.p2_ + ((0.5f * dt) * _e2.dp2_)));
+    let _e29 = compute_derivatives(s2_);
+    let s3_ = PendulumState((state_2.theta1_ + ((0.5f * dt) * _e29.dtheta1_)), (state_2.theta2_ + ((0.5f * dt) * _e29.dtheta2_)), (state_2.p1_ + ((0.5f * dt) * _e29.dp1_)), (state_2.p2_ + ((0.5f * dt) * _e29.dp2_)));
+    let _e55 = compute_derivatives(s3_);
+    let s4_ = PendulumState((state_2.theta1_ + (dt * _e55.dtheta1_)), (state_2.theta2_ + (dt * _e55.dtheta2_)), (state_2.p1_ + (dt * _e55.dp1_)), (state_2.p2_ + (dt * _e55.dp2_)));
+    let _e73 = compute_derivatives(s4_);
+    let dt6_ = (dt / 6f);
+    newState.theta1_ = ((state_2.theta1_ + (dt6_ * (((_e2.dtheta1_ + (2f * _e29.dtheta1_)) + (2f * _e55.dtheta1_)) + _e73.dtheta1_))) % TAUX_naga_oil_mod_XMNXW443UOMX);
+    newState.theta2_ = ((state_2.theta2_ + (dt6_ * (((_e2.dtheta2_ + (2f * _e29.dtheta2_)) + (2f * _e55.dtheta2_)) + _e73.dtheta2_))) % TAUX_naga_oil_mod_XMNXW443UOMX);
+    newState.p1_ = (state_2.p1_ + (dt6_ * (((_e2.dp1_ + (2f * _e29.dp1_)) + (2f * _e55.dp1_)) + _e73.dp1_)));
+    newState.p2_ = (state_2.p2_ + (dt6_ * (((_e2.dp2_ + (2f * _e29.dp2_)) + (2f * _e55.dp2_)) + _e73.dp2_)));
+    let _e141 = newState;
+    return _e141;
+}
+
+fn pendulum_z(state_3: PendulumState) -> vec2<f32> {
+    return vec2<f32>((sin(state_3.theta1_) + sin(state_3.theta2_)), (cos(state_3.theta1_) + cos(state_3.theta2_)));
+}
+
+@vertex 
+fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin(position) vec4<f32> {
+    let corner = (in.vertex_index % 3u);
+    let n = (((in.vertex_index / 3u) % 2u) == 1u);
+    let _e21 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e27 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e42 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let _e48 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos = vec2<f32>((f32((u32(((corner == 1u) || ((corner == 0u) && n))) * _e21)) - (f32(_e27) / 2f)), (f32((u32(((corner == 2u) || ((corner == 0u) && n))) * _e42)) - (f32(_e48) / 2f)));
+    return vec4<f32>(pos, 0f, 1f);
+}
+
+@fragment 
+fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
+    var state: PendulumState;
+    var i: u32 = 0u;
+
+    let _e9 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e14 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e9), f32(_e14)) / vec2(2f)));
+    let _e23 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e28 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e29 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e28);
+    let _e30 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e23)), _e29);
+    let _e33 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    let arg = ((_e30 - _e33) * SCALE);
+    let _e42 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp.x;
+    let _e46 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp.y;
+    state = PendulumState(arg.x, arg.y, _e42, _e46);
+    let _e49 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let dt_1 = (T / _e49);
+    loop {
+        let _e53 = i;
+        if (_e53 < u32(_e49)) {
+        } else {
+            break;
+        }
+        {
+            let _e56 = state;
+            let _e57 = rk4_step(_e56, dt_1);
+            state = _e57;
+        }
+        continuing {
+            let _e59 = i;
+            i = (_e59 + 1u);
+        }
+    }
+    let _e61 = state;
+    let _e64 = rk4_step(_e61, (dt_1 * fract(_e49)));
+    state = _e64;
+    let _e65 = state;
+    let _e66 = pendulum_z(_e65);
+    let _e67 = colormap4X_naga_oil_mod_XMNXWY33SNVQXAX(_e66);
+    return _e67;
 }
 "#;
 }

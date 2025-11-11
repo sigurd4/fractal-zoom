@@ -1,3 +1,6 @@
+use core::time::Duration;
+use std::time::SystemTime;
+
 use num_complex::Complex;
 use num_traits::Float;
 use rand::distr::{Distribution, Uniform};
@@ -25,7 +28,8 @@ where
     center: Complex<F>,
     zoom: F,
     rot: F,
-    phi: Complex<F>
+    phi: Complex<F>,
+    t0: SystemTime
 }
 
 impl<F> View<F>
@@ -46,13 +50,16 @@ where
             zoom,
             center,
             rot: F::zero(),
-            phi
+            phi,
+            t0: SystemTime::now()
         }
     }
 
     pub fn uniforms(&self) -> GlobalUniforms
     {
         GlobalUniforms {
+            time: SystemTime::now().duration_since(self.t0).unwrap().as_secs_f32(),
+            _pad_time: [0; _],
             max_iterations: MAX_ITERATIONS,
             _pad_max_iterations: [0; _],
             window_size: glam::uvec2(self.win_size.width, self.win_size.height),
@@ -112,6 +119,11 @@ where
         T: Fractal
     {
         *self = View::new(fractal, self.win_size)
+    }
+
+    pub fn reset_time(&mut self)
+    {
+        self.t0 = SystemTime::now();
     }
     
     pub fn win_size(&self) -> PhysicalSize<u32>

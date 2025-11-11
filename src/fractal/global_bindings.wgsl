@@ -1,4 +1,5 @@
 struct GlobalUniforms {
+    time: f32,
     window_size: vec2<u32>,
     max_iterations: u32,
     center: vec2<f32>,

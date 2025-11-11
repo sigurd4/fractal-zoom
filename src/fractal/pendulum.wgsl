@@ -4,9 +4,6 @@
 #import consts::TAU;
 
 const G = 9.8f; // gravitational acceleration (m/s^2)
-const T = 10.0f; // total time (s)
-const SCALE = 1.0f;
-const N = 126;
 
 struct PendulumState {
     theta1: f32,
@@ -40,7 +37,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
     let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
 
-    let arg = (cmul(pos/globals.zoom, cis(globals.rot)) - globals.center)*SCALE;
+    let arg = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
     var state = PendulumState(
         arg.x,
         arg.y,
@@ -49,7 +46,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     );
     
     let n = max_iterations();
-    let dt = T/n;
+    let dt = sqrt(globals.time)/n;
     var i: u32 = 0;
     for(; i < u32(n); i++)
     {

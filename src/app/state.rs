@@ -1,5 +1,5 @@
 use core::{fmt::Display, ops::RangeInclusive};
-use std::sync::Arc;
+use std::{sync::Arc, time::SystemTime};
 
 use linspace::Linspace;
 use num_complex::Complex;
@@ -27,7 +27,7 @@ where
     global_uniforms_buffer: wgpu::Buffer,
     global_bind_group: WgpuBindGroup0,
     vertex_buffer: wgpu::Buffer,
-    render_pipeline: wgpu::RenderPipeline,
+    render_pipeline: wgpu::RenderPipeline
 }
 
 impl<F, Z> State<F, Z>
@@ -202,7 +202,8 @@ where
                     Reverse,
                     Idle,
                     Fullscreen,
-                    Reset
+                    Reset,
+                    ResetTime
                 }
 
                 match match event.physical_key
@@ -225,6 +226,7 @@ where
                         KeyCode::Space => Action::Reverse,
                         KeyCode::KeyF if matches!(event.state, ElementState::Pressed) => Action::Fullscreen,
                         KeyCode::KeyR if matches!(event.state, ElementState::Pressed) => Action::Reset,
+                        KeyCode::KeyT if matches!(event.state, ElementState::Pressed) => Action::ResetTime,
                         _ => Action::Idle
                     },
                     PhysicalKey::Unidentified(_) => Action::Idle
@@ -249,6 +251,9 @@ where
                     Action::Reset => {
                         self.view.reset(&self.fractal);
                         self.view_control.reset();
+                    },
+                    Action::ResetTime => {
+                        self.view.reset_time();
                     }
                 }
 

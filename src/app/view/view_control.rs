@@ -4,7 +4,7 @@ use num_complex::{Complex, ComplexFloat};
 use num_traits::{Float, FloatConst, NumAssignOps, Zero};
 use winit::event::{ElementState, TouchPhase};
 
-use crate::{MOVE_CENTER_ACCEL, MOVE_CENTER_SPEED, MOVE_EXP_ACCEL, MOVE_EXP_SPEED, MOVE_ZOOM_ACCEL, MyFloat, NEWTON_MU, ROT_ACCEL, ROT_SPEED, ZOOM_MU, ZOOM_MUL, ZOOM_RANGE, app::{ZoomDirection, view::View}, clamp_rem, f, fractal::Fractal};
+use crate::{MOVE_CENTER_ACCEL, MOVE_CENTER_SPEED, MOVE_EXP_ACCEL, MOVE_EXP_SPEED, MOVE_SHIFT_ACCEL, MOVE_SHIFT_SPEED, MOVE_ZOOM_ACCEL, MyFloat, NEWTON_MU, ROT_ACCEL, ROT_SPEED, ZOOM_MU, ZOOM_MUL, ZOOM_RANGE, app::{ZoomDirection, view::View}, clamp_rem, f, fractal::Fractal};
 
 use super::{MoveDirection, RotateDirection};
 
@@ -14,12 +14,14 @@ where
     F: MyFloat
 {
     center_vel: Complex<F>,
-    phi_vel: Complex<F>,
+    shift_vel: Complex<F>,
+    exp_vel: Complex<F>,
     zoom_vel: F,
     rot_vel: F,
 
     center_move: [Option<bool>; 2],
-    phi_move: [Option<bool>; 2],
+    shift_move: [Option<bool>; 2],
+    exp_move: [Option<bool>; 2],
     reverse: bool,
     rot_dir: Option<bool>,
 }
@@ -32,11 +34,13 @@ where
     {
         Self {
             center_vel: Complex::zero(),
-            phi_vel: Complex::zero(),
+            shift_vel: Complex::zero(),
+            exp_vel: Complex::zero(),
             zoom_vel: F::one(),
             rot_vel: F::zero(),
             center_move: [None; 2],
-            phi_move: [None; 2],
+            shift_move: [None; 2],
+            exp_move: [None; 2],
             reverse: true,
             rot_dir: None,
         }
@@ -49,10 +53,10 @@ where
 {
     pub fn reset(&mut self)
     {
-        let Self { center_move, phi_move, reverse, rot_dir, .. } = *self;
+        let Self { center_move, exp_move, reverse, rot_dir, .. } = *self;
         *self = Self {
             center_move,
-            phi_move,
+            exp_move,
             reverse,
             rot_dir,
             ..Default::default()
@@ -89,15 +93,24 @@ where
         }
     }
 
-    pub fn accel_phi(&mut self, direction: Option<MoveDirection>)
+    pub fn move_exp(&mut self, direction: MoveDirection, button_state: ElementState)
+    {
+        self.exp_move[direction.axis() as usize] = match button_state
+        {
+            ElementState::Pressed => Some(direction.forward()),
+            ElementState::Released => None
+        }
+    }
+
+    pub fn accel_exp(&mut self, direction: Option<MoveDirection>)
     {
         match direction
         {
             Some(direction) => {
                 let dst = match direction.axis()
                 {
-                    false => &mut self.phi_vel.re,
-                    true => &mut self.phi_vel.im
+                    false => &mut self.exp_vel.re,
+                    true => &mut self.exp_vel.im
                 };
                 let accel = f!(MOVE_EXP_ACCEL);
                 match direction.forward()
@@ -106,7 +119,71 @@ where
                     true => *dst += accel
                 }
             },
-            None => self.phi_vel = Complex::zero()
+            None => self.exp_vel = Complex::zero()
+        }
+    }
+
+    pub fn move_shift(&mut self, direction: MoveDirection, button_state: ElementState)
+    {
+        self.shift_move[direction.axis() as usize] = match button_state
+        {
+            ElementState::Pressed => Some(direction.forward()),
+            ElementState::Released => None
+        }
+    }
+
+    pub fn accel_shift(&mut self, direction: Option<MoveDirection>)
+    {
+        match direction
+        {
+            Some(direction) => {
+                let dst = match direction.axis()
+                {
+                    false => &mut self.shift_vel.re,
+                    true => &mut self.shift_vel.im
+                };
+                let accel = f!(MOVE_SHIFT_ACCEL);
+                match direction.forward()
+                {
+                    false => *dst -= accel,
+                    true => *dst += accel
+                }
+            },
+            None => self.shift_vel = Complex::zero()
+        }
+    }
+
+    pub fn rotate(&mut self, direction: RotateDirection, button_state: ElementState)
+    {
+        self.rot_dir = match button_state
+        {
+            ElementState::Pressed => Some(direction.forward()),
+            ElementState::Released => None
+        }
+    }
+
+    pub fn accel_rot(&mut self, direction: Option<RotateDirection>)
+    {
+        match direction
+        {
+            Some(direction) => {
+                let accel = f!(ROT_ACCEL);
+                match direction
+                {
+                    RotateDirection::Left => self.rot_vel -= accel,
+                    RotateDirection::Right => self.rot_vel += accel
+                }
+            },
+            None => self.rot_vel = F::zero()
+        }
+    }
+
+    pub fn reverse(&mut self, button_state: ElementState)
+    {
+        self.reverse = match button_state
+        {
+            ElementState::Pressed => !self.reverse,
+            ElementState::Released => self.reverse
         }
     }
 
@@ -129,49 +206,6 @@ where
                 }
             },
             None => self.zoom_vel = F::one()
-        }
-    }
-
-    pub fn accel_rot(&mut self, direction: Option<RotateDirection>)
-    {
-        match direction
-        {
-            Some(direction) => {
-                let accel = f!(ROT_ACCEL);
-                match direction
-                {
-                    RotateDirection::Left => self.rot_vel -= accel,
-                    RotateDirection::Right => self.rot_vel += accel
-                }
-            },
-            None => self.rot_vel = F::zero()
-        }
-    }
-
-    pub fn move_exp(&mut self, direction: MoveDirection, button_state: ElementState)
-    {
-        self.phi_move[direction.axis() as usize] = match button_state
-        {
-            ElementState::Pressed => Some(direction.forward()),
-            ElementState::Released => None
-        }
-    }
-
-    pub fn reverse(&mut self, button_state: ElementState)
-    {
-        self.reverse = match button_state
-        {
-            ElementState::Pressed => !self.reverse,
-            ElementState::Released => self.reverse
-        }
-    }
-
-    pub fn rotate(&mut self, direction: RotateDirection, button_state: ElementState)
-    {
-        self.rot_dir = match button_state
-        {
-            ElementState::Pressed => Some(direction.forward()),
-            ElementState::Released => None
         }
     }
 
@@ -205,39 +239,38 @@ where
         }
         view.center += self.center_vel;
 
-        if let Some(dc) = fractal.dc_newton(view.win_center/view.zoom - view.center, view.phi)
-        {
-            //view.win_center += dc*f!(ZOOM_MU)*view.zoom;
-        }
-
-        let prev_phi = view.phi;
-        for (dir, phase) in self.phi_move.into_iter()
+        for (dir, phase) in self.shift_move.into_iter()
             .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
             .filter_map(|(exp_move, phase)| exp_move.map(|dir| (dir, phase)))
         {
-            let phi_move = phase(Complex::from(f!(MOVE_EXP_SPEED)/view.zoom));
+            let shift_move = phase(Complex::from(f!(MOVE_SHIFT_SPEED)));
             match dir ^ self.reverse
             {
-                true => view.phi -= phi_move,
-                false => view.phi += phi_move
+                true => view.shift -= shift_move,
+                false => view.shift += shift_move
             }
         }
         match self.reverse
         {
-            true => view.phi -= self.phi_vel,
-            false => view.phi += self.phi_vel
+            true => view.shift -= self.shift_vel,
+            false => view.shift += self.shift_vel
         }
-        view.phi.re = clamp_rem(view.phi.re, F::zero()..F::TAU());
-        view.phi.im = clamp_rem(view.phi.im, F::zero()..F::TAU());
-        let exp = view.exp();
-        // f = (view.win_center/view.zoom - view.center).powc(exp) - (view.win_center/view.zoom - view.center)
-        let df_dcenter = -exp*(view.win_center/view.zoom - view.center).powc(exp - F::one()) + F::one();
-        let df_dexp = (view.win_center/view.zoom - view.center).ln()*view.center.powc(exp);
-        let dcenter_dphi = df_dexp/df_dcenter*view.dexp_dphi();
-        if dcenter_dphi.is_finite()
+
+        for (dir, phase) in self.exp_move.into_iter()
+            .zip([ident, rot270] as [fn(Complex<_>) -> Complex<_>; _])
+            .filter_map(|(exp_move, phase)| exp_move.map(|dir| (dir, phase)))
         {
-            println!("dcenter_dphi = {dcenter_dphi}");
-            //view.center -= dcenter_dphi*(view.phi - prev_phi);
+            let exp_move = phase(Complex::from(f!(MOVE_EXP_SPEED)/view.zoom));
+            match dir ^ self.reverse
+            {
+                true => view.exp -= exp_move,
+                false => view.exp += exp_move
+            }
+        }
+        match self.reverse
+        {
+            true => view.exp -= self.exp_vel,
+            false => view.exp += self.exp_vel
         }
 
         match self.rot_dir
@@ -273,9 +306,11 @@ where
             self.zoom_vel = Float::recip(self.zoom_vel)
         }
 
-        println!();
-        println!("center = {}, venter_vel = {}", view.center, self.center_vel);
+        /*println!();
+        println!("center = {}, center_vel = {}", view.center, self.center_vel);
+        println!("shift = {}, shift_vel = {}", view.shift, self.shift_vel);
+        println!("exp = {}, exp_vel = {}", view.exp, self.exp_vel);
         println!("rot = {}, rot_vel = {}", view.rot, self.rot_vel);
-        println!("zoom = {}, zoom_vel = {}", view.zoom, self.zoom_vel);
+        println!("zoom = {}, zoom_vel = {}", view.zoom, self.zoom_vel);*/
     }
 }

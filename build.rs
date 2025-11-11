@@ -1,10 +1,14 @@
 use miette::IntoDiagnostic;
-use wgsl_bindgen::{WgslBindgenOptionBuilder, WgslShaderIrCapabilities, WgslTypeSerializeStrategy};
+use wgsl_bindgen::{AdditionalScanDirectory, WgslBindgenOptionBuilder, WgslShaderIrCapabilities, WgslTypeSerializeStrategy};
 
 fn main() -> miette::Result<()>
 {
     WgslBindgenOptionBuilder::default()
         .workspace_root("src/fractal")
+        .additional_scan_dirs(vec![AdditionalScanDirectory::from((None, "src/fractal/lib"))])
+        .add_entry_point("src/fractal/blancmange.wgsl")
+        .add_entry_point("src/fractal/cantor.wgsl")
+        .add_entry_point("src/fractal/feigenbaum.wgsl")
         .add_entry_point("src/fractal/mandelbrot.wgsl")
         .add_entry_point("src/fractal/julia.wgsl")
         .add_entry_point("src/fractal/pendulum.wgsl")

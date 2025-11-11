@@ -22,7 +22,7 @@ use num_traits::{Float, FloatConst, Num, NumAssignOps, float::FloatCore};
 use rand::{distr::{Uniform, uniform::SampleUniform}, prelude::Distribution};
 use winit::{event_loop::{ActiveEventLoop, EventLoop}, window::Window};
 
-use crate::{app::{App, State}, fractal::Mandelbrot};
+use crate::{app::{App, State}, fractal::*};
 
 const NEWTON_N: usize = 16;
 const NEWTON_MU: f64 = 0.0001;
@@ -33,27 +33,26 @@ const START_ZOOM: f32 = 100.0;
 
 const ROT_SPEED: f64 = TAU/1000.0;
 const MOVE_CENTER_SPEED: f64 = 10.0;
-const MOVE_EXP_SPEED: f64 = 1.0;
+const MOVE_EXP_SPEED: f64 = 0.1;
+const MOVE_SHIFT_SPEED: f64 = 1.0/1000.0;//*MAX_ITERATIONS.ilog2() as f64/16.0;
 
 const ROT_ACCEL: f64 = 1.0;
 const MOVE_CENTER_ACCEL: f64 = 1.0;
 const MOVE_EXP_ACCEL: f64 = 1.0;
 const MOVE_ZOOM_ACCEL: f64 = 1.0;
+const MOVE_SHIFT_ACCEL: f64 = 1.0;
 
-const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip();
+const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip()*100.0;
 const ZOOM_MUL: f64 = 0.995;
-const MAX_ITERATIONS: u32 = 16;
+const MAX_ITERATIONS: u32 = 32;
 
 pub trait MyFloat = Float + FloatConst + FloatCore + ComplexFloat + NumAssignOps + SampleUniform + Display + Debug;
-
 
 fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
-
-    let fractal = fractal::Pendulum;
     
-    let mut app = App::<f64, _, _>::new(move || fractal);
+    let mut app = App::<f64, _, _>::new(|| Cantor);
 
     event_loop.run_app(&mut app)?;
     Ok(())

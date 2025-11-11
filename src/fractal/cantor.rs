@@ -1,33 +1,32 @@
-use num_complex::{Complex, ComplexFloat};
-use num_traits::Zero;
+use num_complex::Complex;
 
 use crate::{MyFloat, fractal::{Fractal, dcdz}};
 
-use super::wgsl_bindgen::julia;
+use super::wgsl_bindgen::cantor;
 
 #[derive(Clone, Copy)]
-pub struct Julia;
+pub struct Cantor;
 
-impl Fractal for Julia
+impl Fractal for Cantor
 {
-    const LABEL: &str = "julia";
+    const LABEL: &str = "cantor";
 
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         // Create shader module from generated code
-        let shader = julia::create_shader_module_embed_source(device);
+        let shader = cantor::create_shader_module_embed_source(device);
         
         // Use generated pipeline layout
-        let pipeline_layout = julia::create_pipeline_layout(device);
+        let pipeline_layout = cantor::create_pipeline_layout(device);
         
         // Use generated vertex entry with proper buffer layout
-        let vertex_entry = julia::vs_main_entry(wgpu::VertexStepMode::Vertex);
+        let vertex_entry = cantor::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some(Self::LABEL),
             layout: Some(&pipeline_layout),
-            vertex: julia::vertex_state(&shader, &vertex_entry),
-            fragment: Some(julia::fragment_state(&shader, &julia::fs_main_entry([
+            vertex: cantor::vertex_state(&shader, &vertex_entry),
+            fragment: Some(cantor::fragment_state(&shader, &cantor::fs_main_entry([
                 Some(wgpu::ColorTargetState {
                     format: surface_format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),

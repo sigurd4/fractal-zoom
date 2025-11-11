@@ -28,7 +28,8 @@ where
     center: Complex<F>,
     zoom: F,
     rot: F,
-    phi: Complex<F>,
+    exp: Complex<F>,
+    shift: Complex<F>,
     t0: SystemTime
 }
 
@@ -41,8 +42,9 @@ where
         T: Fractal
     {
         let zoom = f!(START_ZOOM);
-        let phi = Complex::new(Float::atan(f!(2.0)), Float::atan(f!(0.0)));
-        let center = fractal.c_initial(f!(DONUT.start)..f!(DONUT.end), phi);
+        let exp = Complex::new(Float::atan(f!(2.0)), Float::atan(f!(0.0)));
+        let shift = Complex::new(Float::atan(f!(0.0)), Float::atan(f!(0.0)));
+        let center = Complex::new(f!(0.0), f!(0.0));
         Self {
             mouse_pos: None,
             win_center: Complex { re: f!(0.0), im: f!(0.0) },
@@ -50,7 +52,8 @@ where
             zoom,
             center,
             rot: F::zero(),
-            phi,
+            exp,
+            shift,
             t0: SystemTime::now()
         }
     }
@@ -66,22 +69,9 @@ where
             center: glam::vec2(self.center.re.to_f32().unwrap(), self.center.im.to_f32().unwrap()),
             zoom: self.zoom.to_f32().unwrap(),
             rot: self.rot.to_f32().unwrap(),
-            exp: glam::vec2(Float::tan(self.phi.re).to_f32().unwrap(), Float::tan(self.phi.im).to_f32().unwrap())
+            exp: glam::vec2(Float::tan(self.exp.re).to_f32().unwrap(), Float::tan(self.exp.im).to_f32().unwrap()),
+            shift: glam::vec2(Float::tan(self.shift.re).to_f32().unwrap(), Float::tan(self.shift.im).to_f32().unwrap())
         }
-    }
-
-    pub fn exp(&self) -> Complex<F>
-    {
-        let f = |z| Float::tan(z);
-
-        Complex::new(f(self.phi.re), f(self.phi.im))
-    }
-
-    pub fn dexp_dphi(&self) -> Complex<F>
-    {
-        let f = |z| F::one() - Float::tan(z)/Float::cos(z);
-
-        Complex::new(f(self.phi.re), f(self.phi.im))
     }
     
     pub fn update_mouse_pos(&mut self, mouse_pos: PhysicalPosition<f64>)

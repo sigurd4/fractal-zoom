@@ -1,33 +1,32 @@
-use num_complex::{Complex, ComplexFloat};
-use num_traits::Zero;
+use num_complex::Complex;
 
 use crate::{MyFloat, fractal::{Fractal, dcdz}};
 
-use super::wgsl_bindgen::julia;
+use super::wgsl_bindgen::feigenbaum;
 
 #[derive(Clone, Copy)]
-pub struct Julia;
+pub struct Feigenbaum;
 
-impl Fractal for Julia
+impl Fractal for Feigenbaum
 {
-    const LABEL: &str = "julia";
+    const LABEL: &str = "feigenbaum";
 
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         // Create shader module from generated code
-        let shader = julia::create_shader_module_embed_source(device);
+        let shader = feigenbaum::create_shader_module_embed_source(device);
         
         // Use generated pipeline layout
-        let pipeline_layout = julia::create_pipeline_layout(device);
+        let pipeline_layout = feigenbaum::create_pipeline_layout(device);
         
         // Use generated vertex entry with proper buffer layout
-        let vertex_entry = julia::vs_main_entry(wgpu::VertexStepMode::Vertex);
+        let vertex_entry = feigenbaum::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some(Self::LABEL),
             layout: Some(&pipeline_layout),
-            vertex: julia::vertex_state(&shader, &vertex_entry),
-            fragment: Some(julia::fragment_state(&shader, &julia::fs_main_entry([
+            vertex: feigenbaum::vertex_state(&shader, &vertex_entry),
+            fragment: Some(feigenbaum::fragment_state(&shader, &feigenbaum::fs_main_entry([
                 Some(wgpu::ColorTargetState {
                     format: surface_format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),

@@ -5,7 +5,8 @@ struct GlobalUniforms {
     center: vec2<f32>,
     zoom: f32,
     rot: f32,
-    exp: vec2<f32>
+    exp: vec2<f32>,
+    shift: vec2<f32>,
 };
 
 struct VertexInput {
@@ -32,4 +33,9 @@ fn view_radius() -> f32
 fn epsilon() -> f32
 {
     return 0.00000000001;
+}
+
+fn wrap(x: f32, w: f32) -> f32
+{
+    return ((x % w) + w) % w;
 }

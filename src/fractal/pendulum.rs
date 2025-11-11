@@ -41,33 +41,4 @@ impl Fractal for Pendulum
             // ... other pipeline state
         })
     }
-
-    fn f<F>(&self, c: Complex<F>, z: Option<Complex<F>>, phi: Complex<F>) -> Complex<F>
-    where
-        F: MyFloat
-    {
-        let exp = phi.tan();
-        z.unwrap_or(c).powc(exp) + c
-    }
-
-    fn f_newton<'a, F>(&'a self, c: Complex<F>, z: Option<Complex<F>>, phi: Complex<F>) -> impl Iterator<Item = Complex<F>> + 'a
-    where
-        F: MyFloat + 'a
-    {
-        let (mut c, z) = ([c, dcdz(z)].into_iter(), z.unwrap_or(c));
-
-        let mut exp = phi.tan();
-        let mut fmc = z.powc(exp);
-
-        core::iter::repeat_with(move || {
-            let mut f = fmc;
-            if let Some(c) = c.next()
-            {
-                f += c
-            }
-            fmc *= exp/z;
-            exp -= F::one();
-            f
-        })
-    }
 }

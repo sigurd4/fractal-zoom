@@ -191,10 +191,12 @@ where
                 enum Action
                 {
                     MoveCenter(MoveDirection),
+                    MoveShift(MoveDirection),
                     MoveExp(MoveDirection),
                     Rotate(RotateDirection),
                     
                     AccelCenter(Option<MoveDirection>),
+                    AccelShift(Option<MoveDirection>),
                     AccelExp(Option<MoveDirection>),
                     AccelZoom(Option<ZoomDirection>),
                     AccelRotate(Option<RotateDirection>),
@@ -213,10 +215,14 @@ where
                             event_loop.exit();
                             return;
                         }
-                        KeyCode::KeyW => Action::MoveExp(MoveDirection::Up),
-                        KeyCode::KeyA => Action::MoveExp(MoveDirection::Left),
-                        KeyCode::KeyS => Action::MoveExp(MoveDirection::Down),
-                        KeyCode::KeyD => Action::MoveExp(MoveDirection::Right),
+                        KeyCode::KeyI => Action::MoveExp(MoveDirection::Up),
+                        KeyCode::KeyJ => Action::MoveExp(MoveDirection::Left),
+                        KeyCode::KeyK => Action::MoveExp(MoveDirection::Down),
+                        KeyCode::KeyL => Action::MoveExp(MoveDirection::Right),
+                        KeyCode::KeyW => Action::MoveShift(MoveDirection::Up),
+                        KeyCode::KeyA => Action::MoveShift(MoveDirection::Left),
+                        KeyCode::KeyS => Action::MoveShift(MoveDirection::Down),
+                        KeyCode::KeyD => Action::MoveShift(MoveDirection::Right),
                         KeyCode::ArrowUp => Action::MoveCenter(MoveDirection::Up),
                         KeyCode::ArrowLeft => Action::MoveCenter(MoveDirection::Left),
                         KeyCode::ArrowDown => Action::MoveCenter(MoveDirection::Down),
@@ -235,10 +241,12 @@ where
                     Action::Idle => return,
                     Action::MoveCenter(direction) => self.view_control.move_center(direction, event.state),
                     Action::MoveExp(direction) => self.view_control.move_exp(direction, event.state),
+                    Action::MoveShift(direction) => self.view_control.move_shift(direction, event.state),
                     Action::Rotate(direction) => self.view_control.rotate(direction, event.state),
 
                     Action::AccelCenter(direction) => self.view_control.accel_center(direction),
-                    Action::AccelExp(direction) => self.view_control.accel_phi(direction),
+                    Action::AccelShift(direction) => self.view_control.accel_shift(direction),
+                    Action::AccelExp(direction) => self.view_control.accel_exp(direction),
                     Action::AccelRotate(direction) => self.view_control.accel_rot(direction),
                     Action::AccelZoom(direction) => self.view_control.accel_zoom(direction, None, &self.view),
 

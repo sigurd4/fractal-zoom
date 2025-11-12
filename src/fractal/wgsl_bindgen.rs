@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 770fb1f7aeb2eb08bf93e6d89c3886236cd0d98fbfd4ca76ce6e26f8e53c4cd5
+// SourceHash: 03cf885094d42b2b55fe30612bf0bdb219921eb9cfc4b31a5723757073c7fe47
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -777,17 +777,16 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
             if ((u32(_e55) == 1u) || (u32(_e60) == 1u)) {
                 break;
             }
-            let _e68 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp.x;
-            let _e69 = z;
-            z = (_e69 * _e68);
-            let _e72 = i;
-            i = (_e72 + 1u);
+            let _e66 = z;
+            z = (_e66 * 3f);
+            let _e69 = i;
+            i = (_e69 + 1u);
         }
     }
-    let _e74 = i;
-    let m = f32(_e74);
-    let _e76 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z0_, m);
-    return _e76;
+    let _e71 = i;
+    let m = f32(_e71);
+    let _e73 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z0_, m);
+    return _e73;
 }
 "#;
 }

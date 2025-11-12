@@ -52,7 +52,7 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
     
-    let mut app = App::<f64, _, _>::new(|| Cantor);
+    let mut app = App::<f64, _, _>::new(|| Pendulum);
 
     event_loop.run_app(&mut app)?;
     Ok(())

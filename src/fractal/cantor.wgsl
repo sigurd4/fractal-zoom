@@ -28,16 +28,20 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var i: u32 = 0;
     for(; i < n;)
     {
+        z = z*3.0;
         z = vec2(
-            wrap(z.x, 3.0),
-            wrap(z.y, 3.0)
+            wrap(z.x + 1.5, 3.0),
+            wrap(z.y + 1.5, 3.0)
         );
         // This is not entirely correct
         if u32(z.x) == 1 || u32(z.y) == 1
         {
             break;
         }
-        z *= 3.0;
+        if i == 0
+        {
+
+        }
         i++;
     }
     let m = f32(i);// - log(log(norm(z)))/log(norm(globals.exp));

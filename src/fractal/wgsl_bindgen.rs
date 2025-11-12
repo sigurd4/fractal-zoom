@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 03cf885094d42b2b55fe30612bf0bdb219921eb9cfc4b31a5723757073c7fe47
+// SourceHash: 2dc9e880583d1b820094381c161427b8c85b0cb14aca059fab8fc9587fdacb25
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -767,26 +767,29 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
             break;
         }
         {
-            let _e46 = z.x;
-            let _e48 = wrapX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e46, 3f);
-            let _e50 = z.y;
-            let _e52 = wrapX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(_e50, 3f);
-            z = vec2<f32>(_e48, _e52);
-            let _e55 = z.x;
-            let _e60 = z.y;
-            if ((u32(_e55) == 1u) || (u32(_e60) == 1u)) {
+            let _e45 = z;
+            z = (_e45 * 3f);
+            let _e49 = z.x;
+            let _e53 = wrapX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((_e49 + 1.5f), 3f);
+            let _e55 = z.y;
+            let _e59 = wrapX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX((_e55 + 1.5f), 3f);
+            z = vec2<f32>(_e53, _e59);
+            let _e62 = z.x;
+            let _e67 = z.y;
+            if ((u32(_e62) == 1u) || (u32(_e67) == 1u)) {
                 break;
             }
-            let _e66 = z;
-            z = (_e66 * 3f);
-            let _e69 = i;
-            i = (_e69 + 1u);
+            let _e72 = i;
+            if (_e72 == 0u) {
+            }
+            let _e76 = i;
+            i = (_e76 + 1u);
         }
     }
-    let _e71 = i;
-    let m = f32(_e71);
-    let _e73 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z0_, m);
-    return _e73;
+    let _e78 = i;
+    let m = f32(_e78);
+    let _e80 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z0_, m);
+    return _e80;
 }
 "#;
 }

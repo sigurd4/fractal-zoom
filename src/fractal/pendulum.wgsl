@@ -126,8 +126,8 @@ fn compute_derivatives(state: PendulumState) -> Derivatives
     let dp2 = coeff2 * (G * sin(theta2) - endbit);
 
     var der = Derivatives();
-    der.dtheta1 = dtheta1;
-    der.dtheta2 = dtheta2;
+    der.dtheta1 = dtheta1 + globals.shift.x;
+    der.dtheta2 = dtheta2 + globals.shift.y;
     der.dp1 = dp1;
     der.dp2 = dp2;
     return der;

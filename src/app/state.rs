@@ -8,7 +8,7 @@ use rand::distr::uniform::SampleUniform;
 use wgpu::{SurfaceConfiguration, util::DeviceExt};
 use winit::{dpi::{PhysicalPosition, PhysicalSize, Size}, event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
 
-use crate::{f, MyFloat, app::{MoveDirection, RotateDirection, ZoomDirection, view::{View, ViewControl}}, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
+use crate::{MOVE_CENTER_ACCEL, MOVE_EXP_ACCEL, MOVE_SHIFT_ACCEL, MOVE_ZOOM_ACCEL, MyFloat, ROT_ACCEL, ZOOM_MUL, app::{MoveDirection, RotateDirection, ZoomDirection, view::View}, f, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
 
 #[derive(Debug)]
 pub struct State<F, Z>
@@ -18,7 +18,6 @@ where
 {
     fractal: Z,
     view: View<F>,
-    view_control: ViewControl<F>,
     window: Arc<Window>,
     surface: wgpu::Surface<'static>,
     config: SurfaceConfiguration,
@@ -126,7 +125,6 @@ where
         Ok(Self {
             fractal,
             view,
-            view_control: Default::default(),
             window,
             surface,
             config,
@@ -150,9 +148,9 @@ where
         }
     }
 
-    pub fn update(&mut self)
+    pub fn update(&mut self) -> anyhow::Result<()>
     {
-        self.view_control.update_view(&mut self.view, &self.fractal);
+        self.view.update()?;
 
         // Update global uniforms with new frame size immediately
         let global_uniforms = self.view.uniforms();
@@ -162,6 +160,7 @@ where
             0,
             bytemuck::cast_slice(&[global_uniforms]),
         );
+        Ok(())
     }
 
     pub fn window_event(
@@ -193,7 +192,12 @@ where
                     MoveCenter(MoveDirection),
                     MoveShift(MoveDirection),
                     MoveExp(MoveDirection),
+                    Zoom(ZoomDirection),
+
                     Rotate(RotateDirection),
+                    RotateCenter(RotateDirection),
+                    RotateShift(RotateDirection),
+                    RotateExp(RotateDirection),
                     
                     AccelCenter(Option<MoveDirection>),
                     AccelShift(Option<MoveDirection>),
@@ -229,6 +233,14 @@ where
                         KeyCode::ArrowRight => Action::MoveCenter(MoveDirection::Right),
                         KeyCode::KeyQ => Action::Rotate(RotateDirection::Left),
                         KeyCode::KeyE => Action::Rotate(RotateDirection::Right),
+                        KeyCode::Comma => Action::RotateCenter(RotateDirection::Left),
+                        KeyCode::Period => Action::RotateCenter(RotateDirection::Right),
+                        KeyCode::KeyZ => Action::RotateExp(RotateDirection::Left),
+                        KeyCode::KeyX => Action::RotateExp(RotateDirection::Right),
+                        KeyCode::KeyN => Action::RotateShift(RotateDirection::Left),
+                        KeyCode::KeyM => Action::RotateShift(RotateDirection::Right),
+                        KeyCode::NumpadAdd => Action::Zoom(ZoomDirection::Inwards),
+                        KeyCode::NumpadSubtract => Action::Zoom(ZoomDirection::Outwards),
                         KeyCode::Space => Action::Reverse,
                         KeyCode::KeyF if matches!(event.state, ElementState::Pressed) => Action::Fullscreen,
                         KeyCode::KeyR if matches!(event.state, ElementState::Pressed) => Action::Reset,
@@ -239,18 +251,23 @@ where
                 }
                 {
                     Action::Idle => return,
-                    Action::MoveCenter(direction) => self.view_control.move_center(direction, event.state),
-                    Action::MoveExp(direction) => self.view_control.move_exp(direction, event.state),
-                    Action::MoveShift(direction) => self.view_control.move_shift(direction, event.state),
-                    Action::Rotate(direction) => self.view_control.rotate(direction, event.state),
+                    Action::MoveCenter(direction) => self.view.center.mov(direction, event.state),
+                    Action::MoveExp(direction) => self.view.exp.mov(direction, event.state),
+                    Action::MoveShift(direction) => self.view.shift.mov(direction, event.state),
+                    Action::Zoom(direction) => self.view.zoom.mov(direction, event.state),
 
-                    Action::AccelCenter(direction) => self.view_control.accel_center(direction),
-                    Action::AccelShift(direction) => self.view_control.accel_shift(direction),
-                    Action::AccelExp(direction) => self.view_control.accel_exp(direction),
-                    Action::AccelRotate(direction) => self.view_control.accel_rot(direction),
-                    Action::AccelZoom(direction) => self.view_control.accel_zoom(direction, None, &self.view),
+                    Action::Rotate(direction) => self.view.rot.rot(direction, event.state),
+                    Action::RotateCenter(direction) => self.view.center.rot(direction, event.state),
+                    Action::RotateShift(direction) => self.view.shift.rot(direction, event.state),
+                    Action::RotateExp(direction) => self.view.exp.rot(direction, event.state),
 
-                    Action::Reverse => self.view_control.reverse(event.state),
+                    Action::AccelCenter(direction) => self.view.center.push(direction.map(|dir| (dir, f!(MOVE_CENTER_ACCEL)))),
+                    Action::AccelShift(direction) => self.view.shift.push(direction.map(|dir| (dir, f!(MOVE_SHIFT_ACCEL)))),
+                    Action::AccelExp(direction) => self.view.exp.push(direction.map(|dir| (dir, f!(MOVE_EXP_ACCEL)))),
+                    Action::AccelRotate(direction) => self.view.rot.push(direction.map(|dir| (dir, f!(ROT_ACCEL)))),
+                    Action::AccelZoom(direction) => self.view.zoom.push(direction.map(|dir| (dir, f!(MOVE_ZOOM_ACCEL)))),
+
+                    Action::Reverse => self.view.reverse(event.state),
                     Action::Fullscreen => self.window.set_fullscreen(match self.window.fullscreen()
                     {
                         Some(Fullscreen::Borderless(_) | Fullscreen::Exclusive(_)) => None,
@@ -258,7 +275,6 @@ where
                     }),
                     Action::Reset => {
                         self.view.reset(&self.fractal);
-                        self.view_control.reset();
                     },
                     Action::ResetTime => {
                         self.view.reset_time();
@@ -274,8 +290,15 @@ where
             WindowEvent::MouseInput { device_id: _, state, button } => {
                 match (button, state)
                 {
-                    (MouseButton::Left, ElementState::Pressed) => self.view.recenter(),
-                    (MouseButton::Middle, ElementState::Pressed) => self.view_control.accel_zoom(None, None, &self.view),
+                    (MouseButton::Left, ElementState::Pressed) => {
+                        self.view.recenter();
+                        self.view.reverse = false
+                    },
+                    (MouseButton::Middle, ElementState::Pressed) => self.view.zoom.stop(),
+                    (MouseButton::Right, ElementState::Pressed) => {
+                        self.view.recenter();
+                        self.view.reverse = true
+                    }
                     _ => ()
                 }
             },
@@ -287,7 +310,7 @@ where
                         MouseScrollDelta::LineDelta(x, y) => y as f64,
                         MouseScrollDelta::PixelDelta(PhysicalPosition {x, y}) => y
                     };
-                    self.view_control.accel_zoom(Some(ZoomDirection::Inwards), Some(f!(accel)), &self.view);
+                    self.view.zoom.push(Some((ZoomDirection::Inwards, f!(accel))));
                 }
             },
             WindowEvent::CursorMoved { position, device_id: _ } => {
@@ -309,7 +332,8 @@ where
             _ => {
                 self.window.request_redraw();
             }
-        }
+        };
+        self.update().expect("Error: ");
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError>
@@ -317,8 +341,6 @@ where
         F: NumAssignOps + SampleUniform + FloatCore + FloatConst,
         RangeInclusive<F>: Linspace<F>
     {
-        self.update();
-
         let output = self.surface.get_current_texture()?;
         let output_view = output.texture.create_view(
             &wgpu::TextureViewDescriptor::default()

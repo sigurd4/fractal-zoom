@@ -1,6 +1,10 @@
-use num_complex::Complex;
+use core::f64::consts::{FRAC_PI_2, PI};
 
-use crate::{MyFloat, fractal::{Fractal, dcdz}};
+use num_complex::Complex;
+use num_traits::Float;
+use winit::dpi::PhysicalSize;
+
+use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
 
 use super::wgsl_bindgen::cantor;
 
@@ -10,6 +14,20 @@ pub struct Cantor;
 impl Fractal for Cantor
 {
     const LABEL: &str = "cantor";
+
+    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
+    where
+        F: MyFloat
+    {
+        let wrapping = |x| Float::tan(x*F::PI() - F::FRAC_PI_2());
+        let gamma = f!(1.0/3.0);
+        let phi = f!(0.5);
+        InitView {
+            exp: Complex::new(wrapping(phi), wrapping(phi)),
+            shift: Complex::new(wrapping(gamma), wrapping(gamma)),
+            ..Default::default()
+        }
+    }
 
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {

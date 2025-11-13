@@ -14,10 +14,7 @@ moddef::moddef!(
     }
 );
 
-use core::ops::Range;
-
 use num_complex::Complex;
-use num_complex::ComplexFloat;
 use num_traits::One;
 use num_traits::Zero;
 use wgsl_bindgen::global_bindings;
@@ -27,12 +24,18 @@ pub use global_bindings::WgpuBindGroup0;
 pub use global_bindings::WgpuBindGroup0Entries;
 pub use global_bindings::WgpuBindGroup0EntriesParams;
 pub use global_bindings::VertexInput;
+use winit::dpi::PhysicalSize;
 
-use crate::{f, MyFloat, NEWTON_N, NEWTON_MU};
+use crate::app::InitView;
+use crate::MyFloat;
 
 pub trait Fractal
 {
     const LABEL: &str;
+
+    fn init_view<F>(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>
+    where
+        F: MyFloat;
 
     fn setup_render_pipeline(
         &self,

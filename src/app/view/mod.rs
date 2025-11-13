@@ -1,21 +1,47 @@
-use core::time::Duration;
 use std::time::SystemTime;
 
 use num_complex::Complex;
-use num_traits::Float;
-use rand::distr::{Distribution, Uniform};
-use winit::dpi::{PhysicalPosition, PhysicalSize};
+use num_traits::{Float, Zero};
+use winit::{dpi::{PhysicalPosition, PhysicalSize}, event::ElementState};
 
-use crate::{DONUT, MAX_ITERATIONS, MyFloat, START_ZOOM, f, fractal::{self, Fractal, GlobalUniforms}};
+use crate::{EXP_ZOOM_VARIANCE, MAX_ITERATIONS, MOVE_CENTER_SPEED, MOVE_EXP_SPEED, MOVE_SHIFT_SPEED, MyFloat, ROT_SPEED, SHIFT_ZOOM_VARIANCE, START_ZOOM, ZOOM_MUL, f, fractal::{Fractal, GlobalUniforms}};
 
 moddef::moddef!(
     flat(pub) mod {
-        view_control,
+        coord_control,
+        rot_control,
+        zoom_control,
         move_direction,
         rotate_direction,
         zoom_direction,
     }
 );
+
+#[derive(Debug, Clone, Copy)]
+pub struct InitView<F>
+where
+    F: MyFloat
+{
+    pub win_center: Complex<F>,
+    pub center: Complex<F>,
+    pub shift: Complex<F>,
+    pub exp: Complex<F>
+}
+
+impl<F> Default for InitView<F>
+where
+    F: MyFloat
+{
+    fn default() -> Self
+    {
+        Self {
+            win_center: Complex::zero(),
+            center: Complex::zero(),
+            shift: Complex::zero(),
+            exp: Complex::zero(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct View<F>
@@ -25,11 +51,12 @@ where
     mouse_pos: Option<Complex<F>>,
     win_size: winit::dpi::PhysicalSize<u32>,
     win_center: Complex<F>,
-    center: Complex<F>,
-    zoom: F,
-    rot: F,
-    exp: Complex<F>,
-    shift: Complex<F>,
+    pub center: CoordControl<F>,
+    pub shift: CoordControl<F>,
+    pub exp: CoordControl<F>,
+    pub zoom: ZoomControl<F>,
+    pub rot: RotControl<F>,
+    pub reverse: bool,
     t0: SystemTime
 }
 
@@ -42,18 +69,17 @@ where
         T: Fractal
     {
         let zoom = f!(START_ZOOM);
-        let exp = Complex::new(Float::atan(f!(2.0)), Float::atan(f!(0.0)));
-        let shift = Complex::new(Float::atan(f!(0.0)), Float::atan(f!(0.0)));
-        let center = Complex::new(f!(0.0), f!(0.0));
+        let InitView { win_center, center, shift, exp } = fractal.init_view(zoom, win_size);
         Self {
             mouse_pos: None,
-            win_center: Complex { re: f!(0.0), im: f!(0.0) },
+            win_center,
             win_size,
-            zoom,
-            center,
-            rot: F::zero(),
-            exp,
-            shift,
+            center: CoordControl::from(center),
+            shift: CoordControl::from(Complex::new(Float::atan(shift.re), Float::atan(shift.im))),
+            exp: CoordControl::from(Complex::new(Float::atan(exp.re), Float::atan(exp.im))),
+            zoom: ZoomControl::from(zoom),
+            rot: RotControl::default(),
+            reverse: false,
             t0: SystemTime::now()
         }
     }
@@ -103,6 +129,15 @@ where
     {
         self.win_size = win_size
     }
+    
+    pub fn reverse(&mut self, button_state: ElementState)
+    {
+        self.reverse = match button_state
+        {
+            ElementState::Pressed => !self.reverse,
+            ElementState::Released => self.reverse
+        }
+    }
 
     pub fn reset<T>(&mut self, fractal: &T)
     where
@@ -119,5 +154,15 @@ where
     pub fn win_size(&self) -> PhysicalSize<u32>
     {
         self.win_size
+    }
+
+    pub fn update(&mut self) -> anyhow::Result<()>
+    {
+        self.center.update(Complex::from_polar(f!(MOVE_CENTER_SPEED)/(*self.zoom), *self.rot), f!(ROT_SPEED), self.reverse)?;
+        self.shift.update(Complex::from(f!(MOVE_SHIFT_SPEED))*Float::powf(Float::recip(*self.zoom), f!(SHIFT_ZOOM_VARIANCE)), f!(ROT_SPEED), self.reverse)?;
+        self.exp.update(Complex::from(f!(MOVE_EXP_SPEED))*Float::powf(Float::recip(*self.zoom), f!(EXP_ZOOM_VARIANCE)), f!(ROT_SPEED), self.reverse)?;
+        self.zoom.update(f!(ZOOM_MUL), self.reverse, &mut self.center, self.win_center, *self.rot)?;
+        self.rot.update(f!(ROT_SPEED), self.reverse, *self.center, &mut self.win_center, *self.zoom)?;
+        Ok(())
     }
 }

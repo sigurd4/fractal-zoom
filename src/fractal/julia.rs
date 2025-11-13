@@ -1,7 +1,8 @@
 use num_complex::{Complex, ComplexFloat};
 use num_traits::Zero;
+use winit::dpi::PhysicalSize;
 
-use crate::{MyFloat, fractal::{Fractal, dcdz}};
+use crate::{f, MyFloat, app::InitView, fractal::{Fractal, dcdz}};
 
 use super::wgsl_bindgen::julia;
 
@@ -11,6 +12,16 @@ pub struct Julia;
 impl Fractal for Julia
 {
     const LABEL: &str = "julia";
+
+    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
+    where
+        F: MyFloat
+    {
+        InitView {
+            exp: Complex::new(f!(2.0), F::zero()),
+            ..Default::default()
+        }
+    }
 
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {

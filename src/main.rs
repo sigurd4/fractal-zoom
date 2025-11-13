@@ -31,10 +31,10 @@ const ZOOM_MU: f64 = 0.01;
 
 const START_ZOOM: f32 = 100.0;
 
-const ROT_SPEED: f64 = TAU/1000.0;
-const MOVE_CENTER_SPEED: f64 = 10.0;
-const MOVE_EXP_SPEED: f64 = 0.1;
-const MOVE_SHIFT_SPEED: f64 = 1.0/1000.0;//*MAX_ITERATIONS.ilog2() as f64/16.0;
+const ROT_SPEED: f64 = TAU/16.0;
+const MOVE_CENTER_SPEED: f64 = 330.0;
+const MOVE_EXP_SPEED: f64 = 100.0;
+const MOVE_SHIFT_SPEED: f64 = 100.0;//*MAX_ITERATIONS.ilog2() as f64/16.0;
 
 const ROT_ACCEL: f64 = 1.0;
 const MOVE_CENTER_ACCEL: f64 = 1.0;
@@ -43,8 +43,12 @@ const MOVE_ZOOM_ACCEL: f64 = 1.0;
 const MOVE_SHIFT_ACCEL: f64 = 1.0;
 
 const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip()*100.0;
-const ZOOM_MUL: f64 = 0.995;
+const ZOOM_MUL: f64 = 0.1;
+const ZOOM_BASE: f64 = 1e4;
 const MAX_ITERATIONS: u32 = 32;
+
+const SHIFT_ZOOM_VARIANCE: f64 = 1.1;
+const EXP_ZOOM_VARIANCE: f64 = 1.1;
 
 pub trait MyFloat = Float + FloatConst + FloatCore + ComplexFloat + NumAssignOps + SampleUniform + Display + Debug;
 
@@ -52,7 +56,7 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
     
-    let mut app = App::<f64, _, _>::new(|| Cantor);
+    let mut app = App::<f64, _, _>::new(|| Mandelbrot);
 
     event_loop.run_app(&mut app)?;
     Ok(())

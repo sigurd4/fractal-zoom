@@ -1,6 +1,8 @@
 use num_complex::Complex;
+use num_traits::Zero;
+use winit::dpi::PhysicalSize;
 
-use crate::{MyFloat, fractal::{Fractal, dcdz}};
+use crate::{MyFloat, app::InitView, fractal::Fractal};
 
 use super::wgsl_bindgen::pendulum;
 
@@ -10,6 +12,17 @@ pub struct Pendulum;
 impl Fractal for Pendulum
 {
     const LABEL: &str = "pendulum";
+
+    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
+    where
+        F: MyFloat
+    {
+        InitView {
+            exp: Complex::zero(),
+            shift: Complex::zero(),
+            ..Default::default()
+        }
+    }
 
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {

@@ -1,6 +1,8 @@
 use num_complex::Complex;
+use num_traits::Zero;
+use winit::dpi::PhysicalSize;
 
-use crate::{MyFloat, fractal::{Fractal, dcdz}};
+use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
 
 use super::wgsl_bindgen::blancmange;
 
@@ -10,6 +12,17 @@ pub struct Blancmange;
 impl Fractal for Blancmange
 {
     const LABEL: &str = "blancmange";
+
+    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
+    where
+        F: MyFloat
+    {
+        let w = f!(1.0/2.0);
+        InitView {
+            exp: Complex::new(w, Zero::zero()),
+            ..Default::default()
+        }
+    }
 
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {

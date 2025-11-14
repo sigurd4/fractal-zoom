@@ -29,7 +29,7 @@ const NEWTON_MU: f64 = 0.0001;
 const DONUT: Range<f64> = 0.5..2.0;
 const ZOOM_MU: f64 = 0.01;
 
-const START_ZOOM: f32 = 100.0;
+const START_ZOOM: f32 = 2e2;
 
 const ROT_SPEED: f64 = TAU/16.0;
 const MOVE_CENTER_SPEED: f64 = 330.0;
@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
     
-    let mut app = App::<f64, _, _>::new(|| Mandelbrot);
+    let mut app = App::<f64, _, _>::new(|| Cantor::cantor());
 
     event_loop.run_app(&mut app)?;
     Ok(())

@@ -1,6 +1,6 @@
 #import global_bindings::{GlobalUniforms, VertexInput, wrap, globals, max_iterations, view_radius, epsilon};
 #import colormap::colormap3;
-#import complex::{cmul, cis, norm_sqr, norm, powc}
+#import complex::{cmul, cis, norm_sqr, norm, powc, cdiv}
 #import consts::PI;
 
 @vertex
@@ -23,22 +23,30 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 
     var z = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
     let z0 = z;
-    let gamma = vec2(atan(1.0/globals.shift.x)/PI + 0.5, atan(1.0/globals.shift.y)/PI + 0.5);
+    //let phi = vec2(atan(globals.shift.x)/PI + 0.5, atan(globals.shift.y)/PI + 0.5);
+    let phi = globals.shift;
+    let r = vec2(phi.y - phi.x, 0.0);
+    var lambda = r;
+    let mul_lambda = powc(r, globals.exp);
+    let c = phi.y + phi.x;
+    z = cmul(z, lambda);
     
     let n = u32(max_iterations());
     var i: u32 = 0;
     for(; i < n;)
     {
+        lambda = cmul(lambda, mul_lambda);
         z = vec2(
-            wrap(z.x + 1.0/2.0, 1.0),
-            wrap(z.y + 1.0/2.0, 1.0)
+            wrap(z.x + c/2.0, 1.0),
+            wrap(z.y + c/2.0, 1.0)
         );
-        // This is not entirely correct
-        if z.x > gamma.x || z.x < 1.0 - gamma.x || gamma.x == 0.0 || z.y > gamma.y || z.y < 1.0 - gamma.y || gamma.y == 0.0
+        if ((z.x > phi.x && z.x < phi.y) != (phi.y < phi.x))
+            || ((z.y > phi.x && z.y < phi.y) != (phi.y < phi.x))
+            || phi.x == phi.y
         {
             break;
         }
-        z /= gamma;
+        z = cdiv(z, lambda);
         i++;
     }
     let m = f32(i);// - log(log(norm(z)))/log(norm(globals.exp));

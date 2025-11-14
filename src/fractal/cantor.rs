@@ -1,15 +1,73 @@
-use core::f64::consts::{FRAC_PI_2, PI};
+use core::{f64::consts::{FRAC_PI_2, PI}, ops::Range};
 
 use num_complex::Complex;
-use num_traits::Float;
+use num_traits::{Float, One, Zero};
 use winit::dpi::PhysicalSize;
 
 use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
 
 use super::wgsl_bindgen::cantor;
 
-#[derive(Clone, Copy)]
-pub struct Cantor;
+/// K = 1 + nλ
+/// r = φ₂ - φ₁
+/// C := C/((k + (φ₂ + φ₁ - rᴷ)/2)rᴷⁿ, (k + (φ₂ + φ₁ + rᴷ)/2)rᴷⁿ)
+#[derive(Clone)]
+pub struct Cantor
+{
+    pub phi: Range<f64>,
+    pub lambda: Complex<f64>
+}
+
+impl Cantor
+{
+    /// γ = 1/3
+    /// C := C/((k + (1 - γ)/2)γⁿ, (k + (1 + γ)/2)γⁿ)
+    pub fn cantor() -> Self
+    {
+        Self::symmetric(1.0/3.0)
+    }
+    /// C := C/((k + (1 - γ)/2)γⁿ, (k + (1 + γ)/2)γⁿ)
+    pub fn symmetric(gamma: f64) -> Self
+    {
+        Self::assymetric(Self::symmetric_range(gamma))
+    }
+    /// γ = φ₂ - φ₁
+    /// C := C/((k + φ₁)(φ₂ - φ₁)ⁿ, (k + φ₂)(φ₂ - φ₁)ⁿ)
+    pub fn assymetric(gamma: Range<f64>) -> Self
+    {
+        Self {
+            phi: gamma,
+            lambda: Complex::zero()
+        }
+    }
+
+    /// r = 1/4
+    /// C := C/((k + (1 - rⁿ)/2)rⁿⁿ, (k + (1 + rⁿ)/2)rⁿⁿ)
+    pub fn smith_volterra() -> Self
+    {
+        Self::fat(1.0/4.0)
+    }
+    /// C := C/((k + (1 - rⁿ)/2)rⁿⁿ, (k + (1 + rⁿ)/2)rⁿⁿ)
+    pub fn fat(r: f64) -> Self
+    {
+        Self::fat_assymetric(Self::symmetric_range(r))
+    }
+    /// r = φ₂ - φ₁
+    /// C := C/((k + (φ₂ + φ₁ - rⁿ)/2)rⁿⁿ, (k + (φ₂ + φ₁ + rⁿ)/2)rⁿⁿ)
+    pub fn fat_assymetric(r: Range<f64>) -> Self
+    {
+        Self {
+            phi: r,
+            lambda: Complex::one()
+        }
+    }
+
+    fn symmetric_range(mut phi: f64) -> Range<f64>
+    {
+        phi = phi % 1.0;
+        (1.0 - phi)/2.0..(1.0 + phi)/2.0
+    }
+}
 
 impl Fractal for Cantor
 {
@@ -19,12 +77,14 @@ impl Fractal for Cantor
     where
         F: MyFloat
     {
-        let wrapping = |x| Float::tan(x*F::PI() - F::FRAC_PI_2());
-        let gamma = f!(1.0/3.0);
-        let phi = f!(0.5);
+        //let wrapping = |x| Float::tan(f!(x)*F::PI() - F::FRAC_PI_2());
+
+        let Self { phi, lambda } = self;
+
         InitView {
-            exp: Complex::new(wrapping(phi), wrapping(phi)),
-            shift: Complex::new(wrapping(gamma), wrapping(gamma)),
+            exp: Complex::new(f!(lambda.re), f!(lambda.im)),
+            //shift: Complex::new(wrapping(phi.start), wrapping(phi.end)),
+            shift: Complex::new(f!(phi.start), f!(phi.end)),
             ..Default::default()
         }
     }

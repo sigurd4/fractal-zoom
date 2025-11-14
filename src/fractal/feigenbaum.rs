@@ -6,6 +6,7 @@ use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
 
 use super::wgsl_bindgen::feigenbaum;
 
+/// z := rz(1 - z)
 #[derive(Clone, Copy)]
 pub struct Feigenbaum;
 

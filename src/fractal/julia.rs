@@ -9,6 +9,13 @@ use super::wgsl_bindgen::julia;
 #[derive(Clone, Copy)]
 pub struct Julia;
 
+pub enum JuliaVariant
+{
+    Dendrite,
+    /// Unofficial name
+    Clover
+}
+
 impl Fractal for Julia
 {
     const LABEL: &str = "julia";
@@ -17,7 +24,13 @@ impl Fractal for Julia
     where
         F: MyFloat
     {
+        let shift = match JuliaVariant::Dendrite
+        {
+            JuliaVariant::Dendrite => Complex::i(),
+            JuliaVariant::Clover => f!(1.0/4.0).into()
+        };
         InitView {
+            shift,
             exp: Complex::new(f!(2.0), F::zero()),
             ..Default::default()
         }

@@ -13,6 +13,7 @@ fn main() -> miette::Result<()>
         .add_entry_point("src/fractal/fibonacci_hamiltonian.wgsl")
         .add_entry_point("src/fractal/julia.wgsl")
         .add_entry_point("src/fractal/pendulum.wgsl")
+        .add_entry_point("src/fractal/supergolden.wgsl")
         .serialization_strategy(WgslTypeSerializeStrategy::Bytemuck)
         .emit_rerun_if_change(true)
         //.shader_source_type(WgslShaderSourceType::ComposerWithRelativePath)

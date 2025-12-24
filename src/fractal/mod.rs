@@ -11,7 +11,8 @@ moddef::moddef!(
         fibonacci_hamiltonian,
         julia,
         mandelbrot,
-        pendulum
+        pendulum,
+        supergolden
     }
 );
 

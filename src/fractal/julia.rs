@@ -7,13 +7,25 @@ use crate::{f, MyFloat, app::InitView, fractal::{Fractal, dcdz}};
 use super::wgsl_bindgen::julia;
 
 #[derive(Clone, Copy)]
-pub struct Julia;
-
-pub enum JuliaVariant
+pub struct Julia
 {
-    Dendrite,
-    /// Unofficial name
-    Clover
+    c: Complex<f64>
+}
+
+impl Julia
+{
+    pub fn dendrite() -> Self
+    {
+        Self {
+            c: Complex { re: 0.0, im: 1.0 }
+        }
+    }
+    pub fn clover() -> Self
+    {
+        Self {
+            c: Complex { re: 1.0/4.0, im: 0.0 }
+        }
+    }
 }
 
 impl Fractal for Julia
@@ -24,13 +36,8 @@ impl Fractal for Julia
     where
         F: MyFloat
     {
-        let shift = match JuliaVariant::Dendrite
-        {
-            JuliaVariant::Dendrite => Complex::i(),
-            JuliaVariant::Clover => f!(1.0/4.0).into()
-        };
         InitView {
-            shift,
+            shift: Complex::new(f!(self.c.re), f!(self.c.im)),
             exp: Complex::new(f!(2.0), F::zero()),
             ..Default::default()
         }

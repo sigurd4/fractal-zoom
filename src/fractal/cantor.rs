@@ -40,7 +40,6 @@ impl Cantor
             lambda: Complex::zero()
         }
     }
-
     /// r = 1/4
     /// C := C/((k + (1 - rⁿ)/2)rⁿⁿ, (k + (1 + rⁿ)/2)rⁿⁿ)
     pub fn smith_volterra() -> Self
@@ -77,13 +76,10 @@ impl Fractal for Cantor
     where
         F: MyFloat
     {
-        //let wrapping = |x| Float::tan(f!(x)*F::PI() - F::FRAC_PI_2());
-
         let Self { phi, lambda } = self;
 
         InitView {
             exp: Complex::new(f!(lambda.re), f!(lambda.im)),
-            //shift: Complex::new(wrapping(phi.start), wrapping(phi.end)),
             shift: Complex::new(f!(phi.start), f!(phi.end)),
             ..Default::default()
         }

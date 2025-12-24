@@ -8,6 +8,7 @@ moddef::moddef!(
         blancmange,
         cantor,
         feigenbaum,
+        fibonacci_hamiltonian,
         julia,
         mandelbrot,
         pendulum

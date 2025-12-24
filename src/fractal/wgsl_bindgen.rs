@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: 4e2d648d7776723c4e92666c70002d29f7f46468fb55b5bee9cf5d985be38542
+// SourceHash: 0665970b7d2ef176c952a86552db9baf06aae2c8e14f4cba91de1c3bc8f985a9
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -12,6 +12,7 @@ pub enum ShaderEntry
     Cantor,
     Feigenbaum,
     Mandelbrot,
+    FibonacciHamiltonian,
     Julia,
     Pendulum
 }
@@ -25,6 +26,7 @@ impl ShaderEntry
             Self::Cantor => cantor::create_pipeline_layout(device),
             Self::Feigenbaum => feigenbaum::create_pipeline_layout(device),
             Self::Mandelbrot => mandelbrot::create_pipeline_layout(device),
+            Self::FibonacciHamiltonian => fibonacci_hamiltonian::create_pipeline_layout(device),
             Self::Julia => julia::create_pipeline_layout(device),
             Self::Pendulum => pendulum::create_pipeline_layout(device)
         }
@@ -38,6 +40,7 @@ impl ShaderEntry
             Self::Cantor => cantor::create_shader_module_embed_source(device),
             Self::Feigenbaum => feigenbaum::create_shader_module_embed_source(device),
             Self::Mandelbrot => mandelbrot::create_shader_module_embed_source(device),
+            Self::FibonacciHamiltonian => fibonacci_hamiltonian::create_shader_module_embed_source(device),
             Self::Julia => julia::create_shader_module_embed_source(device),
             Self::Pendulum => pendulum::create_shader_module_embed_source(device)
         }
@@ -1328,6 +1331,271 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     let _e78 = z;
     let _e79 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e78, m);
     return _e79;
+}
+"#;
+}
+pub mod fibonacci_hamiltonian
+{
+    use super::{_root, _root::*};
+    pub const ENTRY_VS_MAIN: &str = "vs_main";
+    pub const ENTRY_FS_MAIN: &str = "fs_main";
+    #[derive(Debug)]
+    pub struct VertexEntry<const N: usize>
+    {
+        pub entry_point: &'static str,
+        pub buffers: [wgpu::VertexBufferLayout<'static>; N],
+        pub constants: Vec<(&'static str, f64)>
+    }
+    pub fn vertex_state<'a, const N: usize>(module: &'a wgpu::ShaderModule, entry: &'a VertexEntry<N>) -> wgpu::VertexState<'a>
+    {
+        wgpu::VertexState {
+            module,
+            entry_point: Some(entry.entry_point),
+            buffers: &entry.buffers,
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &entry.constants,
+                ..Default::default()
+            }
+        }
+    }
+    pub fn vs_main_entry(vertex_input: wgpu::VertexStepMode) -> VertexEntry<1>
+    {
+        VertexEntry {
+            entry_point: ENTRY_VS_MAIN,
+            buffers: [global_bindings::VertexInput::vertex_buffer_layout(vertex_input)],
+            constants: Default::default()
+        }
+    }
+    #[derive(Debug)]
+    pub struct FragmentEntry<const N: usize>
+    {
+        pub entry_point: &'static str,
+        pub targets: [Option<wgpu::ColorTargetState>; N],
+        pub constants: Vec<(&'static str, f64)>
+    }
+    pub fn fragment_state<'a, const N: usize>(module: &'a wgpu::ShaderModule, entry: &'a FragmentEntry<N>) -> wgpu::FragmentState<'a>
+    {
+        wgpu::FragmentState {
+            module,
+            entry_point: Some(entry.entry_point),
+            targets: &entry.targets,
+            compilation_options: wgpu::PipelineCompilationOptions {
+                constants: &entry.constants,
+                ..Default::default()
+            }
+        }
+    }
+    pub fn fs_main_entry(targets: [Option<wgpu::ColorTargetState>; 1]) -> FragmentEntry<1>
+    {
+        FragmentEntry {
+            entry_point: ENTRY_FS_MAIN,
+            targets,
+            constants: Default::default()
+        }
+    }
+    #[doc = " Bind groups can be set individually using their set(render_pass) method, or all at once using `WgpuBindGroups::set`."]
+    #[doc = " For optimal performance with many draw calls, it's recommended to organize bindings into bind groups based on update frequency:"]
+    #[doc = "   - Bind group 0: Least frequent updates (e.g. per frame resources)"]
+    #[doc = "   - Bind group 1: More frequent updates"]
+    #[doc = "   - Bind group 2: More frequent updates"]
+    #[doc = "   - Bind group 3: Most frequent updates (e.g. per draw resources)"]
+    #[derive(Debug, Copy, Clone)]
+    pub struct WgpuBindGroups<'a>
+    {
+        pub bind_group0: &'a global_bindings::WgpuBindGroup0
+    }
+    impl<'a> WgpuBindGroups<'a>
+    {
+        pub fn set(&self, pass: &mut impl SetBindGroup)
+        {
+            self.bind_group0.set(pass);
+        }
+    }
+    #[derive(Debug)]
+    pub struct WgpuPipelineLayout;
+    impl WgpuPipelineLayout
+    {
+        pub fn bind_group_layout_entries(entries: [wgpu::BindGroupLayout; 1]) -> [wgpu::BindGroupLayout; 1]
+        {
+            entries
+        }
+    }
+    pub fn create_pipeline_layout(device: &wgpu::Device) -> wgpu::PipelineLayout
+    {
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("FibonacciHamiltonian::PipelineLayout"),
+            bind_group_layouts: &[&global_bindings::WgpuBindGroup0::get_bind_group_layout(device)],
+            push_constant_ranges: &[]
+        })
+    }
+    pub fn create_shader_module_embed_source(device: &wgpu::Device) -> wgpu::ShaderModule
+    {
+        let source = std::borrow::Cow::Borrowed(SHADER_STRING);
+        device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("fibonacci_hamiltonian.wgsl"),
+            source: wgpu::ShaderSource::Wgsl(source)
+        })
+    }
+    pub const SHADER_STRING: &str = r#"
+struct VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
+    @builtin(vertex_index) vertex_index: u32,
+    @location(0) @interpolate(flat) vertex_id: u32,
+}
+
+struct GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX {
+    time: f32,
+    window_size: vec2<u32>,
+    max_iterations: u32,
+    center: vec2<f32>,
+    zoom: f32,
+    rot: f32,
+    exp: vec2<f32>,
+    shift: vec2<f32>,
+}
+
+const TAUX_naga_oil_mod_XMNXW443UOMX: f32 = 6.2831855f;
+
+@group(0) @binding(0) 
+var<uniform> globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX: GlobalUniformsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX;
+
+fn max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX() -> f32 {
+    let _e2 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.max_iterations;
+    let _e6 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    return (f32(_e2) * max(1f, log(_e6)));
+}
+
+fn cisX_naga_oil_mod_XMNXW24DMMV4AX(rot: f32) -> vec2<f32> {
+    return vec2<f32>(cos(rot), sin(rot));
+}
+
+fn cmulX_naga_oil_mod_XMNXW24DMMV4AX(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32> {
+    return (mat2x2<f32>(vec2<f32>(lhs.x, lhs.y), vec2<f32>(-(lhs.y), lhs.x)) * rhs);
+}
+
+fn norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x: vec2<f32>) -> f32 {
+    return dot(x, x);
+}
+
+fn normX_naga_oil_mod_XMNXW24DMMV4AX(x_1: vec2<f32>) -> f32 {
+    let _e1 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(x_1);
+    return sqrt(_e1);
+}
+
+fn wrapX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX(x_2: f32, w: f32) -> f32 {
+    return (((x_2 % w) + w) % w);
+}
+
+fn hsl2rgbX_naga_oil_mod_XMNXWY33SX(c: vec3<f32>) -> vec3<f32> {
+    let rgb = clamp((abs((((vec3((c.x * 6f)) + vec3<f32>(0f, 4f, 2f)) % vec3(6f)) - vec3(3f))) - vec3(1f)), vec3<f32>(0f, 0f, 0f), vec3<f32>(1f, 1f, 1f));
+    return (vec3(c.z) + ((c.y * (rgb - vec3(0.5f))) * (1f - abs(((2f * c.z) - 1f)))));
+}
+
+fn argX_naga_oil_mod_XMNXW24DMMV4AX(x_3: vec2<f32>) -> f32 {
+    return atan2(x_3.y, x_3.x);
+}
+
+fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_1: f32) -> vec4<f32> {
+    let _e0 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let t = clamp(((i_1 / _e0) % 1f), 0f, 1f);
+    let _e9 = normX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
+    let z_norm = (1f - exp(-(f32(_e9))));
+    let _e15 = argX_naga_oil_mod_XMNXW24DMMV4AX(z_1);
+    let hue = ((f32(_e15) / 6.2831855f) + 0.5f);
+    let _e24 = hsl2rgbX_naga_oil_mod_XMNXWY33SX(vec3<f32>(hue, (z_norm / 2f), t));
+    return vec4<f32>(_e24, 0.8f);
+}
+
+@vertex 
+fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin(position) vec4<f32> {
+    let corner = (in.vertex_index % 3u);
+    let n = (((in.vertex_index / 3u) % 2u) == 1u);
+    let _e21 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e27 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e42 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let _e48 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos = vec2<f32>((f32((u32(((corner == 1u) || ((corner == 0u) && n))) * _e21)) - (f32(_e27) / 2f)), (f32((u32(((corner == 2u) || ((corner == 0u) && n))) * _e42)) - (f32(_e48) / 2f)));
+    return vec4<f32>(pos, 0f, 1f);
+}
+
+@fragment 
+fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
+    var z: vec2<f32>;
+    var i: u32 = 0u;
+    var z_prev: vec2<f32>;
+    var z_prev_prev: vec2<f32>;
+    var z_prev_1: vec2<f32>;
+
+    let _e9 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
+    let _e14 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
+    let pos_1 = ((position.xy / vec2(position.w)) - (vec2<f32>(f32(_e9), f32(_e14)) / vec2(2f)));
+    let _e23 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.zoom;
+    let _e28 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.rot;
+    let _e29 = cisX_naga_oil_mod_XMNXW24DMMV4AX(_e28);
+    let _e30 = cmulX_naga_oil_mod_XMNXW24DMMV4AX((pos_1 / vec2(_e23)), _e29);
+    let _e33 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.center;
+    let e = (_e30 - _e33);
+    let _e37 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.shift;
+    z = _e37;
+    let lambda = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+    let _e42 = z;
+    let _e43 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e42);
+    let r = max(1f, _e43);
+    let _e46 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
+    let n_1 = u32(_e46);
+    let _e48 = z;
+    let _e49 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e48);
+    if (_e49 <= (r * 4f)) {
+        let _e53 = z;
+        z_prev = _e53;
+        z = e;
+        let _e57 = i;
+        i = (_e57 + 1u);
+        let _e59 = z;
+        let _e60 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e59);
+        if (_e60 <= (r * 4f)) {
+            let _e64 = z_prev;
+            z_prev_prev = _e64;
+            let _e66 = z;
+            z_prev_1 = _e66;
+            z = (e - lambda);
+            let _e70 = i;
+            i = (_e70 + 1u);
+            loop {
+                let _e72 = i;
+                let _e74 = z;
+                let _e75 = norm_sqrX_naga_oil_mod_XMNXW24DMMV4AX(_e74);
+                if ((_e72 < n_1) && (_e75 <= (r * 4f))) {
+                } else {
+                    break;
+                }
+                {
+                    let _e80 = z;
+                    let _e81 = z_prev_1;
+                    let _e82 = cmulX_naga_oil_mod_XMNXW24DMMV4AX(_e80, _e81);
+                    let _e83 = z_prev_prev;
+                    let z_next = (_e82 - _e83);
+                    let _e85 = z_prev_1;
+                    z_prev_prev = _e85;
+                    let _e86 = z;
+                    z_prev_1 = _e86;
+                    z = z_next;
+                }
+                continuing {
+                    let _e88 = i;
+                    i = (_e88 + 1u);
+                }
+            }
+        }
+    }
+    let _e90 = i;
+    let _e92 = z;
+    let _e93 = normX_naga_oil_mod_XMNXW24DMMV4AX(_e92);
+    let _e98 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
+    let _e99 = normX_naga_oil_mod_XMNXW24DMMV4AX(_e98);
+    let m = (f32(_e90) - (log(log(_e93)) / log(_e99)));
+    let _e103 = z;
+    let _e104 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e103, m);
+    return _e104;
 }
 "#;
 }

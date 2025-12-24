@@ -10,6 +10,7 @@ fn main() -> miette::Result<()>
         .add_entry_point("src/fractal/cantor.wgsl")
         .add_entry_point("src/fractal/feigenbaum.wgsl")
         .add_entry_point("src/fractal/mandelbrot.wgsl")
+        .add_entry_point("src/fractal/fibonacci_hamiltonian.wgsl")
         .add_entry_point("src/fractal/julia.wgsl")
         .add_entry_point("src/fractal/pendulum.wgsl")
         .serialization_strategy(WgslTypeSerializeStrategy::Bytemuck)

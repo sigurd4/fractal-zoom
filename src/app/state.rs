@@ -206,9 +206,11 @@ where
                     AccelRotate(Option<RotateDirection>),
 
                     Reverse,
+                    Stop,
                     Idle,
                     Fullscreen,
                     Reset,
+                    ResetView,
                     ResetTime
                 }
 
@@ -244,7 +246,9 @@ where
                         KeyCode::Space => Action::Reverse,
                         KeyCode::KeyF if matches!(event.state, ElementState::Pressed) => Action::Fullscreen,
                         KeyCode::KeyR if matches!(event.state, ElementState::Pressed) => Action::Reset,
+                        KeyCode::KeyV if matches!(event.state, ElementState::Pressed) => Action::ResetView,
                         KeyCode::KeyT if matches!(event.state, ElementState::Pressed) => Action::ResetTime,
+                        KeyCode::KeyB if matches!(event.state, ElementState::Pressed) => Action::Stop,
                         _ => Action::Idle
                     },
                     PhysicalKey::Unidentified(_) => Action::Idle
@@ -273,12 +277,10 @@ where
                         Some(Fullscreen::Borderless(_) | Fullscreen::Exclusive(_)) => None,
                         None => Some(Fullscreen::Borderless(None))
                     }),
-                    Action::Reset => {
-                        self.view.reset(&self.fractal);
-                    },
-                    Action::ResetTime => {
-                        self.view.reset_time();
-                    }
+                    Action::Reset => self.view.reset(&self.fractal),
+                    Action::ResetView => self.view.reset_view(&self.fractal),
+                    Action::ResetTime => self.view.reset_time(),
+                    Action::Stop => self.view.zoom.stop()
                 }
 
                 self.window.request_redraw();
@@ -318,14 +320,17 @@ where
                 self.view.update_mouse_pos(position);
                 self.window.request_redraw();
             },
-            WindowEvent::ScaleFactorChanged { .. } => {},
+            WindowEvent::ScaleFactorChanged { .. } => self.resize(self.view.win_size()),
             WindowEvent::RedrawRequested => {
                 match self.render()
                 {
-                    Ok(_) => {}
-                    Err(wgpu::SurfaceError::Lost) => self.resize(self.view.win_size()),
-                    Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
-                    Err(e) => eprintln!("{e:?}"),
+                    Ok(()) => {}
+                    Err(err) => match err
+                    {
+                        wgpu::SurfaceError::Lost => self.resize(self.view.win_size()),
+                        wgpu::SurfaceError::OutOfMemory => event_loop.exit(),
+                        err => eprintln!("wgpu::SurfaceError::{err:?}")
+                    }
                 }
                 self.window.request_redraw();
             },

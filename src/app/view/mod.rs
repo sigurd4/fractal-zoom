@@ -146,6 +146,13 @@ where
         *self = View::new(fractal, self.win_size)
     }
 
+    pub fn reset_view<T>(&mut self, fractal: &T)
+    where
+        T: Fractal
+    {
+        *self = Self { shift: self.shift, exp: self.exp, t0: self.t0, ..Self::new(fractal, self.win_size) }
+    }
+
     pub fn reset_time(&mut self)
     {
         self.t0 = SystemTime::now();

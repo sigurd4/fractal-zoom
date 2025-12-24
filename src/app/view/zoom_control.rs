@@ -16,6 +16,7 @@ where
     pos: F,
     vel: F,
     acc: F,
+    brk: F,
     mov: Option<bool>
 }
 
@@ -53,6 +54,7 @@ where
             pos: One::one(),
             vel: One::one(),
             acc: Zero::zero(),
+            brk: Zero::zero(),
             mov: None
         }
     }
@@ -88,6 +90,18 @@ where
         let acc = core::mem::replace(&mut self.acc, F::zero());
         let vel_mul = Float::exp(f!(ZOOM_BASE)*acc*dt);
         self.vel *= vel_mul;
+        let brk = core::mem::replace(&mut self.brk, F::zero());
+        let hyp = Float::ln(Float::abs(self.vel));
+        let sgn = Float::signum(hyp);
+        let kat = hyp*hyp - f!(ZOOM_BASE)*dt*brk*Float::abs(brk);
+        if Float::is_sign_negative(kat)
+        {
+            self.vel = F::one()
+        }
+        else
+        {
+            self.vel = Float::exp(sgn*Float::sqrt(kat));
+        }
 
         let mut vel = Float::powf(self.vel, dt);
         if let Some(dir) = self.mov
@@ -127,6 +141,11 @@ where
             },
             None => self.stop()
         }
+    }
+
+    pub fn brk(&mut self, brk: F)
+    {
+        self.brk += brk;
     }
 
     pub fn stop(&mut self)

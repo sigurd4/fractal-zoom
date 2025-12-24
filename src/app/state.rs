@@ -305,12 +305,13 @@ where
             WindowEvent::MouseWheel { device_id: _, delta, phase } => match phase
             {
                 _ => {
-                    let accel = match delta
+                    let (accel, brk) = match delta
                     {
-                        MouseScrollDelta::LineDelta(x, y) => y as f64,
-                        MouseScrollDelta::PixelDelta(PhysicalPosition {x, y}) => y
+                        MouseScrollDelta::LineDelta(x, y) => (y as f64, x as f64),
+                        MouseScrollDelta::PixelDelta(PhysicalPosition {x, y}) => (y, x)
                     };
                     self.view.zoom.push(Some((ZoomDirection::Inwards, f!(accel))));
+                    self.view.zoom.brk(f!(brk))
                 }
             },
             WindowEvent::CursorMoved { position, device_id: _ } => {

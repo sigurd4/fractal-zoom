@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
     
-    let mut app = App::<f64, _, _>::new(|| Feigenbaum);
+    let mut app = App::<f64, _, _>::new(|| FibonacciHamiltonian::default());
 
     event_loop.run_app(&mut app)?;
     Ok(())

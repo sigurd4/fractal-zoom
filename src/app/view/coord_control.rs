@@ -122,8 +122,8 @@ where
         {
             self.pos *= Complex::cis(match rot
             {
-                true => rot_speed,
-                false => -rot_speed
+                true => rot_speed*dt,
+                false => -rot_speed*dt
             })
         }
 

@@ -12,6 +12,7 @@ moddef::moddef!(
         julia,
         mandelbrot,
         pendulum,
+        rauzy,
         supergolden
     }
 );

@@ -63,5 +63,4 @@ fn croot(c: vec2<f32>) -> vec2<f32>
         b.y ^= mask & ((b.x << i) ^ (b.y << i));
     }
     return bitcast<vec2<f32>>(b);
-    return c;
 }

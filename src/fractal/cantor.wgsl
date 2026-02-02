@@ -36,7 +36,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     for(; i < n;)
     {
         // 2z = (2k + (φ₂ + φ₁ - rᴷ), 2k + (φ₂ + φ₁ + rᴷ))
-        // 2z = (2k + (φ₂ + φ₁ - rᴷ), 2k + (φ₂ + φ₁ + rᴷ))
+        // 2z = (2k + (c - rᴷ), 2k + (c + rᴷ))
         z = vec2(
             wrap(2.0*z.x, 2.0),
             wrap(2.0*z.y, 2.0)

@@ -58,20 +58,24 @@ fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
 
-    /*let fractals = (
+    let fractals = (
         [
             Arc::new(Feigenbaum::default()),
-            Arc::new(Cantor::cantor()),
-            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
-            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0))
-            // MORE:
-            Arc::new(Fibo)
-        ] as [Arc<dyn Fractal<_>>; _]
+            Arc::new(Cantor::cantor()), // TODO
+            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)), // TODO
+            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)), // TODO
+            Arc::new(FibonacciHamiltonian::default()),
+            Arc::new(Cantor::smith_volterra()), // TODO
+            // TODO: cantor triangle
+            Arc::new(Blancmange::default()), // TODO
+            Arc::new(Supergolden), // TODO,
+            Arc::new(Julia::clover())
+        ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()
-        .cycle();*/
+        .cycle();
     
-    let mut app = App::<f64, _, _>::new(core::iter::repeat_with(|| FibonacciHamiltonian::default()));
+    let mut app = App::<f64, _, _>::new(fractals);
 
     event_loop.run_app(&mut app)?;
     Ok(())

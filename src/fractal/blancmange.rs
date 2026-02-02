@@ -1,5 +1,5 @@
 use num_complex::Complex;
-use num_traits::Zero;
+use num_traits::{One, Zero};
 use winit::dpi::PhysicalSize;
 
 use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
@@ -7,7 +7,20 @@ use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
 use super::wgsl_bindgen::blancmange;
 
 #[derive(Clone, Copy)]
-pub struct Blancmange;
+pub struct Blancmange
+{
+    w: Complex<f64>
+}
+
+impl Default for Blancmange
+{
+    fn default() -> Self
+    {
+        Self {
+            w: Complex::new(0.5, 0.0)
+        }
+    }
+}
 
 impl<F> Fractal<F> for Blancmange
 where
@@ -20,9 +33,10 @@ where
 
     fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
-        let w = f!(1.0/2.0);
+        let Self { w } = self;
         InitView {
-            exp: Complex::new(w, Zero::zero()),
+            exp: Complex::new(f!(w.re), f!(w.im)),
+            shift: Complex::one(),
             ..Default::default()
         }
     }

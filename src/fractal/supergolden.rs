@@ -9,13 +9,16 @@ use super::wgsl_bindgen::supergolden;
 #[derive(Clone, Copy)]
 pub struct Supergolden;
 
-impl Fractal for Supergolden
+impl<F> Fractal<F> for Supergolden
+where
+    F: MyFloat
 {
-    const LABEL: &str = "supergolden";
+    fn label(&self) -> &'static str
+    {
+        "supergolden"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         InitView {
             exp: Complex::new(f!(2.0), F::zero()),
@@ -36,7 +39,7 @@ impl Fractal for Supergolden
         let vertex_entry = supergolden::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: supergolden::vertex_state(&shader, &vertex_entry),
             fragment: Some(supergolden::fragment_state(&shader, &supergolden::fs_main_entry([

@@ -1,7 +1,9 @@
 #![feature(trait_alias)]
 #![feature(iter_next_chunk)]
+#![feature(unique_rc_arc)]
 
 use core::{f32::EPSILON, f64::consts::TAU, fmt::{Debug, Display}, ops::Range};
+use std::sync::Arc;
 
 use num_complex::{Complex, ComplexFloat};
 
@@ -55,8 +57,21 @@ pub trait MyFloat = Float + FloatConst + FloatCore + ComplexFloat + NumAssignOps
 fn main() -> anyhow::Result<()>
 {
     let event_loop = EventLoop::new()?;
+
+    /*let fractals = (
+        [
+            Arc::new(Feigenbaum::default()),
+            Arc::new(Cantor::cantor()),
+            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
+            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0))
+            // MORE:
+            Arc::new(Fibo)
+        ] as [Arc<dyn Fractal<_>>; _]
+    ).into_iter()
+        .rev()
+        .cycle();*/
     
-    let mut app = App::<f64, _, _>::new(|| Supergolden);
+    let mut app = App::<f64, _, _>::new(core::iter::repeat_with(|| FibonacciHamiltonian::default()));
 
     event_loop.run_app(&mut app)?;
     Ok(())

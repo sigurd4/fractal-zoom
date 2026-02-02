@@ -27,13 +27,16 @@ impl Default for FibonacciHamiltonian
     }
 }
 
-impl Fractal for FibonacciHamiltonian
+impl<F> Fractal<F> for FibonacciHamiltonian
+where
+    F: MyFloat
 {
-    const LABEL: &str = "fibonacci_hamiltonian";
+    fn label(&self) -> &'static str
+    {
+        "fibonacci_hamiltonian"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         let Self { f, lambda } = self;
 
@@ -56,7 +59,7 @@ impl Fractal for FibonacciHamiltonian
         let vertex_entry = fibonacci_hamiltonian::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: fibonacci_hamiltonian::vertex_state(&shader, &vertex_entry),
             fragment: Some(fibonacci_hamiltonian::fragment_state(&shader, &fibonacci_hamiltonian::fs_main_entry([

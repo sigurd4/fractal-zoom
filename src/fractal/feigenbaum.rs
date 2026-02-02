@@ -1,5 +1,4 @@
 use num_complex::Complex;
-use num_traits::Zero;
 use winit::dpi::PhysicalSize;
 
 use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
@@ -8,18 +7,35 @@ use super::wgsl_bindgen::feigenbaum;
 
 /// z := rz(1 - z)
 #[derive(Clone, Copy)]
-pub struct Feigenbaum;
-
-impl Fractal for Feigenbaum
+pub struct Feigenbaum
 {
-    const LABEL: &str = "feigenbaum";
+    pub r: Complex<f64>
+}
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+impl Default for Feigenbaum
+{
+    fn default() -> Self
     {
+        Self {
+            r: Complex::from(2.0)
+        }
+    }
+}
+
+impl<F> Fractal<F> for Feigenbaum
+where
+    F: MyFloat
+{
+    fn label(&self) -> &'static str
+    {
+        "feigenbaum"
+    }
+
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
+    {
+        let Self { r } = self;
         InitView {
-            exp: Complex::new(f!(2.0), Zero::zero()),
+            exp: Complex::new(f!(r.re), f!(r.im)),
             ..Default::default()
         }
     }
@@ -36,7 +52,7 @@ impl Fractal for Feigenbaum
         let vertex_entry = feigenbaum::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: feigenbaum::vertex_state(&shader, &vertex_entry),
             fragment: Some(feigenbaum::fragment_state(&shader, &feigenbaum::fs_main_entry([

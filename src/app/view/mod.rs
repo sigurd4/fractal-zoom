@@ -66,7 +66,7 @@ where
 {
     pub fn new<T>(fractal: &T, win_size: PhysicalSize<u32>) -> Self
     where
-        T: Fractal
+        T: Fractal<F>
     {
         let zoom = f!(START_ZOOM);
         let InitView { win_center, center, shift, exp } = fractal.init_view(zoom, win_size);
@@ -141,21 +141,23 @@ where
 
     pub fn reset<T>(&mut self, fractal: &T)
     where
-        T: Fractal
+        T: Fractal<F>
     {
         *self = View::new(fractal, self.win_size)
+    }
+    pub fn reset_time(&mut self)
+    {
+        self.t0 = SystemTime::now();
     }
 
     pub fn reset_view<T>(&mut self, fractal: &T)
     where
-        T: Fractal
+        T: Fractal<F>
     {
-        *self = Self { shift: self.shift, exp: self.exp, t0: self.t0, ..Self::new(fractal, self.win_size) }
-    }
-
-    pub fn reset_time(&mut self)
-    {
-        self.t0 = SystemTime::now();
+        let zoom = f!(START_ZOOM);
+        let InitView { win_center, center, shift: _, exp: _ } = fractal.init_view(zoom, self.win_size);
+        self.win_center = win_center;
+        *self.center = center;
     }
     
     pub fn win_size(&self) -> PhysicalSize<u32>

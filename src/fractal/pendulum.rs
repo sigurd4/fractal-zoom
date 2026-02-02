@@ -9,13 +9,16 @@ use super::wgsl_bindgen::pendulum;
 #[derive(Clone, Copy)]
 pub struct Pendulum;
 
-impl Fractal for Pendulum
+impl<F> Fractal<F> for Pendulum
+where
+    F: MyFloat
 {
-    const LABEL: &str = "pendulum";
+    fn label(&self) -> &'static str
+    {
+        "pendulum"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         InitView {
             exp: Complex::zero(),
@@ -36,7 +39,7 @@ impl Fractal for Pendulum
         let vertex_entry = pendulum::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: pendulum::vertex_state(&shader, &vertex_entry),
             fragment: Some(pendulum::fragment_state(&shader, &pendulum::fs_main_entry([

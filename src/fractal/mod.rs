@@ -16,6 +16,9 @@ moddef::moddef!(
     }
 );
 
+use core::ops::Deref;
+use std::sync::Arc;
+
 use num_complex::Complex;
 use num_traits::One;
 use num_traits::Zero;
@@ -31,19 +34,70 @@ use winit::dpi::PhysicalSize;
 use crate::app::InitView;
 use crate::MyFloat;
 
-pub trait Fractal
+pub trait Fractal<F>
+where
+    F: MyFloat
 {
-    const LABEL: &str;
+    fn label(&self) -> &'static str;
 
-    fn init_view<F>(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat;
+    fn init_view(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>;
 
     fn setup_render_pipeline(
         &self,
         device: &wgpu::Device,
         surface_format: wgpu::TextureFormat
     ) -> wgpu::RenderPipeline;
+}
+
+impl<F, T> Fractal<F> for Box<T>
+where
+    T: Fractal<F> + ?Sized,
+    F: MyFloat
+{
+    fn label(&self) -> &'static str
+    {
+        self.deref().label()
+    }
+    
+    fn init_view(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>
+    {
+        self.deref().init_view(zoom, win_size)
+    }
+    
+    fn setup_render_pipeline(
+        &self,
+        device: &wgpu::Device,
+        surface_format: wgpu::TextureFormat
+    ) -> wgpu::RenderPipeline
+    {
+        self.deref().setup_render_pipeline(device, surface_format)
+    }
+}
+
+
+impl<F, T> Fractal<F> for Arc<T>
+where
+    T: Fractal<F> + ?Sized,
+    F: MyFloat
+{
+    fn label(&self) -> &'static str
+    {
+        self.deref().label()
+    }
+    
+    fn init_view(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>
+    {
+        self.deref().init_view(zoom, win_size)
+    }
+    
+    fn setup_render_pipeline(
+        &self,
+        device: &wgpu::Device,
+        surface_format: wgpu::TextureFormat
+    ) -> wgpu::RenderPipeline
+    {
+        self.deref().setup_render_pipeline(device, surface_format)
+    }
 }
 
 fn dcdz<F, T>(z: Option<Complex<F>>) -> T

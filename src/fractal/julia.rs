@@ -28,13 +28,16 @@ impl Julia
     }
 }
 
-impl Fractal for Julia
+impl<F> Fractal<F> for Julia
+where
+    F: MyFloat
 {
-    const LABEL: &str = "julia";
+    fn label(&self) -> &'static str
+    {
+        "julia"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         InitView {
             shift: Complex::new(f!(self.c.re), f!(self.c.im)),
@@ -55,7 +58,7 @@ impl Fractal for Julia
         let vertex_entry = julia::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: julia::vertex_state(&shader, &vertex_entry),
             fragment: Some(julia::fragment_state(&shader, &julia::fs_main_entry([

@@ -9,13 +9,16 @@ use super::wgsl_bindgen::blancmange;
 #[derive(Clone, Copy)]
 pub struct Blancmange;
 
-impl Fractal for Blancmange
+impl<F> Fractal<F> for Blancmange
+where
+    F: MyFloat
 {
-    const LABEL: &str = "blancmange";
+    fn label(&self) -> &'static str
+    {
+        "blancmange"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         let w = f!(1.0/2.0);
         InitView {
@@ -36,7 +39,7 @@ impl Fractal for Blancmange
         let vertex_entry = blancmange::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: blancmange::vertex_state(&shader, &vertex_entry),
             fragment: Some(blancmange::fragment_state(&shader, &blancmange::fs_main_entry([

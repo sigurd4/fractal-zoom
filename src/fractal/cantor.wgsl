@@ -35,17 +35,20 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var i: u32 = 0;
     for(; i < n;)
     {
-        lambda = cmul(lambda, mul_lambda);
+        // 2z = (2k + (φ₂ + φ₁ - rᴷ), 2k + (φ₂ + φ₁ + rᴷ))
+        // 2z = (2k + (φ₂ + φ₁ - rᴷ), 2k + (φ₂ + φ₁ + rᴷ))
         z = vec2(
-            wrap(z.x + c/2.0, 1.0),
-            wrap(z.y + c/2.0, 1.0)
+            wrap(2.0*z.x, 2.0),
+            wrap(2.0*z.y, 2.0)
         );
-        if ((z.x > phi.x && z.x < phi.y) != (phi.y < phi.x))
-            || ((z.y > phi.x && z.y < phi.y) != (phi.y < phi.x))
-            || phi.x == phi.y
+        if ((z.x > c - abs(lambda.x) && z.x < c + abs(lambda.x)) != (lambda.x < 0.0))
+            || ((z.y > c - abs(lambda.x) && z.y < c + abs(lambda.x)) != (lambda.x < 0.0))
+            || lambda.x == 0.0
+            || lambda.x == 0.0
         {
             break;
         }
+        lambda = cmul(lambda, mul_lambda);
         z = cdiv(z, lambda);
         i++;
     }

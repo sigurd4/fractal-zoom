@@ -68,13 +68,16 @@ impl Cantor
     }
 }
 
-impl Fractal for Cantor
+impl<F> Fractal<F> for Cantor
+where
+    F: MyFloat
 {
-    const LABEL: &str = "cantor";
+    fn label(&self) -> &'static str
+    {
+        "cantor"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         let Self { phi, lambda } = self;
 
@@ -97,7 +100,7 @@ impl Fractal for Cantor
         let vertex_entry = cantor::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: cantor::vertex_state(&shader, &vertex_entry),
             fragment: Some(cantor::fragment_state(&shader, &cantor::fs_main_entry([

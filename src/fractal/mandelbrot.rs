@@ -9,13 +9,16 @@ use super::wgsl_bindgen::mandelbrot;
 #[derive(Clone, Copy)]
 pub struct Mandelbrot;
 
-impl Fractal for Mandelbrot
+impl<F> Fractal<F> for Mandelbrot
+where
+    F: MyFloat
 {
-    const LABEL: &str = "mandelbrot";
+    fn label(&self) -> &'static str
+    {
+        "mandelbrot"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         InitView {
             exp: Complex::new(f!(2.0), F::zero()),
@@ -35,7 +38,7 @@ impl Fractal for Mandelbrot
         let vertex_entry = mandelbrot::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: mandelbrot::vertex_state(&shader, &vertex_entry),
             fragment: Some(mandelbrot::fragment_state(&shader, &mandelbrot::fs_main_entry([

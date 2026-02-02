@@ -5,7 +5,7 @@ use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::{distr::{uniform::SampleUniform}};
 use winit::{application::ApplicationHandler, dpi::LogicalSize, event::WindowEvent, event_loop::ActiveEventLoop, window::{Fullscreen, Window, WindowId}};
 
-use crate::{MyFloat, fractal::Fractal};
+use crate::{MyFloat, fractal::{self, Fractal}};
 
 moddef::moddef!(
     flat(pub) mod {
@@ -14,28 +14,38 @@ moddef::moddef!(
     }
 );
 
-pub struct App<F, Z, G = fn() -> Z>
+pub struct App<F, Z, G>
 where
     F: MyFloat,
-    G: FnMut() -> Z,
-    Z: Fractal
+    G: IntoIterator<Item = Z>,
+    Z: Fractal<F>
 {
-    fractal: G,
+    fractal: G::IntoIter,
     state: Option<State<F, Z>>
 }
 
 impl<F, Z, G> App<F, Z, G>
 where
     F: MyFloat,
-    G: FnMut() -> Z,
-    Z: Fractal
+    G: IntoIterator<Item = Z>,
+    Z: Fractal<F>
 {
-    pub const fn new(fractal: G) -> Self
+    pub fn new(fractal: G) -> Self
     {
         Self {
-            fractal,
+            fractal: fractal.into_iter(),
             state: None
         }
+    }
+
+    fn next_fractal(&mut self, event_loop: &ActiveEventLoop) -> Option<Z>
+    {
+        let fractal = self.fractal.next();
+        if fractal.is_none()
+        {
+            event_loop.exit()
+        }
+        fractal
     }
 }
 
@@ -43,8 +53,8 @@ impl<F, Z, G> ApplicationHandler<()> for App<F, Z, G>
 where
     F: MyFloat,
     RangeInclusive<F>: Linspace<F>,
-    G: FnMut() -> Z,
-    Z: Fractal
+    G: IntoIterator<Item = Z>,
+    Z: Fractal<F>
 {
     fn resumed(&mut self, event_loop: &ActiveEventLoop)
     {
@@ -56,9 +66,13 @@ where
             .with_inner_size(LogicalSize::new(1024, 768))
         ).unwrap();
 
-        self.state = Some(futures::executor::block_on(async {
-            State::new(window, (self.fractal)()).await.unwrap()
-        }));
+        self.state = futures::executor::block_on(async {
+            Some(State::new(window, self.next_fractal(event_loop)?).await.unwrap())
+        });
+        if self.state.is_none()
+        {
+            event_loop.exit();
+        }
     }
     
     fn window_event(
@@ -70,7 +84,20 @@ where
     {
         if let Some(state) = self.state.as_mut()
         {
-            state.window_event(event_loop, window_id, event);
+            match state.window_event(event_loop, window_id, event)
+            {
+                AppAction::Idle => (),
+                AppAction::NextFractal => if let Some(fractal) = self.next_fractal(event_loop)
+                {
+                    self.state = self.state.take().map(|state| state.with_fractal(fractal).unwrap());
+                }
+            }
         }
     }
+}
+
+pub enum AppAction
+{
+    Idle,
+    NextFractal
 }

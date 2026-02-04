@@ -27,7 +27,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var i: u32 = 0;
     for(; i < n && norm_sqr(z) < r*4.0; i++)
     {
-        z = cmul(z + c, powc(z, e)) + c;
+        z = cmul(z - c, powc(z, e)) - c;
     }
     let m = f32(f64(i) - log(log(norm(z)))/log(norm(e)));
     let zz = vec2(f32(z.x), f32(z.y));

@@ -8,14 +8,16 @@ moddef::moddef!(
         blancmange,
         cantor,
         feigenbaum,
-        fibonacci_hamiltonian,
+        fibonacci_hamiltonian_julia,
+        fibonacci_hamiltonian_mandelbrot,
         julia,
         henon,
         mandelbrot,
         heighway_dragon,
         pendulum,
         rauzy,
-        supergolden,
+        supergolden_julia,
+        supergolden_mandelbrot,
         fibonacci_snowflake
     }
 );

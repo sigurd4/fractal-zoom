@@ -69,14 +69,18 @@ fn main() -> anyhow::Result<()>
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0).sierpinski()),
             Arc::new(FibonacciHamiltonianJulia::default()),
             Arc::new(FibonacciHamiltonianMandelbrot::default()), // unknown hausdorf dim
-            //Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
-            //Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
-            // TODO: cantor triangle
-            //Arc::new(Blancmange::default()), // TODO: fail
             Arc::new(SupergoldenJulia),
             Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim
             /*Arc::new(Julia::clover()),
             Arc::new(Rauzy::default()), // TODO
+            //Arc::new(FibonacciHamiltonian::default()),
+            //Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
+            //Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
+            // TODO: cantor triangle
+            //Arc::new(Blancmange::default()), // TODO
+            //Arc::new(Supergolden), // TODO
+            //Arc::new(Julia::clover()),
+            //Arc::new(Rauzy::default()), // TODO
             // TODO: gosper island
             //Arc::new(Julia::dendrite()),
             //Arc::new(FibonacciSnowlake), // TODO: fail

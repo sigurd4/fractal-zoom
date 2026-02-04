@@ -21,7 +21,10 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var c = z_in(position);
     var z = shift_in();
     let e = exp_in();
+<<<<<<< HEAD
     var w = vec2(1.0, 0.0);
+=======
+>>>>>>> b6928a2 (Try to add f64 (it crashes))
     let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
     
     let n = u32(max_iterations());

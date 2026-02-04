@@ -51,7 +51,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
         var stop = false;
         z.x = cantor_dim(z.x, c, r_k.x, &ok, &stop);
         z.y = cantor_dim(z.y, c, r_k.y, &ok, &stop);
-        if(!ok || stop)
+        if(!ok || stop || (ok == stop))
         {
             break;
         }

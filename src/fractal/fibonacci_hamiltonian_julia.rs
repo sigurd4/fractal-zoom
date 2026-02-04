@@ -6,16 +6,16 @@ use winit::dpi::PhysicalSize;
 
 use crate::{MyFloat, app::InitView, f, fractal::{Fractal, dcdz}};
 
-use super::wgsl_bindgen::fibonacci_hamiltonian;
+use super::wgsl_bindgen::fibonacci_hamiltonian_julia;
 
 #[derive(Clone)]
-pub struct FibonacciHamiltonian
+pub struct FibonacciHamiltonianJulia
 {
     pub f: Complex<f64>,
     pub lambda: Complex<f64>
 }
 
-impl Default for FibonacciHamiltonian
+impl Default for FibonacciHamiltonianJulia
 {
     fn default() -> Self
     {
@@ -27,13 +27,13 @@ impl Default for FibonacciHamiltonian
     }
 }
 
-impl<F> Fractal<F> for FibonacciHamiltonian
+impl<F> Fractal<F> for FibonacciHamiltonianJulia
 where
     F: MyFloat
 {
     fn label(&self) -> &'static str
     {
-        "fibonacci_hamiltonian"
+        "fibonacci_hamiltonian_julia"
     }
 
     fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
@@ -50,19 +50,19 @@ where
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         // Create shader module from generated code
-        let shader = fibonacci_hamiltonian::create_shader_module_embed_source(device);
+        let shader = fibonacci_hamiltonian_julia::create_shader_module_embed_source(device);
         
         // Use generated pipeline layout
-        let pipeline_layout = fibonacci_hamiltonian::create_pipeline_layout(device);
+        let pipeline_layout = fibonacci_hamiltonian_julia::create_pipeline_layout(device);
         
         // Use generated vertex entry with proper buffer layout
-        let vertex_entry = fibonacci_hamiltonian::vs_main_entry(wgpu::VertexStepMode::Vertex);
+        let vertex_entry = fibonacci_hamiltonian_julia::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
-            vertex: fibonacci_hamiltonian::vertex_state(&shader, &vertex_entry),
-            fragment: Some(fibonacci_hamiltonian::fragment_state(&shader, &fibonacci_hamiltonian::fs_main_entry([
+            vertex: fibonacci_hamiltonian_julia::vertex_state(&shader, &vertex_entry),
+            fragment: Some(fibonacci_hamiltonian_julia::fragment_state(&shader, &fibonacci_hamiltonian_julia::fs_main_entry([
                 Some(wgpu::ColorTargetState {
                     format: surface_format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),

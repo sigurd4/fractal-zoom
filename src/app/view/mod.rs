@@ -177,9 +177,10 @@ where
 
     pub fn update(&mut self) -> anyhow::Result<()>
     {
-        self.center.update(Complex::from_polar(f!(MOVE_CENTER_SPEED)/(*self.zoom), *self.rot), f!(ROT_SPEED), self.reverse)?;
-        self.shift.update(Complex::from(f!(MOVE_SHIFT_SPEED))*Float::powf(Float::recip(*self.zoom), f!(SHIFT_ZOOM_VARIANCE)), f!(ROT_SPEED), self.reverse)?;
-        self.exp.update(Complex::from(f!(MOVE_EXP_SPEED))*Float::powf(Float::recip(*self.zoom), f!(EXP_ZOOM_VARIANCE)), f!(ROT_SPEED), self.reverse)?;
+        let speed = Float::signum(*self.zoom)*Float::min(Float::recip(Float::abs(*self.zoom)), F::from(START_ZOOM.recip()).unwrap());
+        self.center.update(Complex::from_polar(f!(MOVE_CENTER_SPEED)*speed, *self.rot), f!(ROT_SPEED), self.reverse)?;
+        self.shift.update(Complex::from(f!(MOVE_SHIFT_SPEED))*Float::powf(speed, f!(SHIFT_ZOOM_VARIANCE)), f!(ROT_SPEED), self.reverse)?;
+        self.exp.update(Complex::from(f!(MOVE_EXP_SPEED))*Float::powf(speed, f!(EXP_ZOOM_VARIANCE)), f!(ROT_SPEED), self.reverse)?;
         self.zoom.update(f!(ZOOM_MUL), self.reverse, &mut self.center, self.win_center, *self.rot)?;
         self.rot.update(f!(ROT_SPEED), self.reverse, *self.center, &mut self.win_center, *self.zoom)?;
         Ok(())

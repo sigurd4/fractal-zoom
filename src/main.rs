@@ -35,8 +35,8 @@ const START_ZOOM: f32 = 2e2;
 
 const ROT_SPEED: f64 = TAU/16.0;
 const MOVE_CENTER_SPEED: f64 = 330.0;
-const MOVE_EXP_SPEED: f64 = 100.0;
-const MOVE_SHIFT_SPEED: f64 = 100.0;//*MAX_ITERATIONS.ilog2() as f64/16.0;
+const MOVE_EXP_SPEED: f64 = 30.0;
+const MOVE_SHIFT_SPEED: f64 = 30.0;//*MAX_ITERATIONS.ilog2() as f64/16.0;
 
 const ROT_ACCEL: f64 = 1.0;
 const MOVE_CENTER_ACCEL: f64 = 1.0;
@@ -67,13 +67,15 @@ fn main() -> anyhow::Result<()>
             Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()),
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)),
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0).sierpinski()),
-            Arc::new(FibonacciHamiltonian::default()),
+            Arc::new(FibonacciHamiltonianJulia::default()),
+            Arc::new(FibonacciHamiltonianMandelbrot::default()), // unknown hausdorf dim
             //Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
             //Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
             // TODO: cantor triangle
             //Arc::new(Blancmange::default()), // TODO: fail
-            /*Arc::new(Supergolden), // TODO
-            Arc::new(Julia::clover()),
+            Arc::new(SupergoldenJulia),
+            Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim
+            /*Arc::new(Julia::clover()),
             Arc::new(Rauzy::default()), // TODO
             // TODO: gosper island
             Arc::new(Julia::dendrite()),
@@ -82,6 +84,7 @@ fn main() -> anyhow::Result<()>
             //Arc::new(Henon::default()),
             // TODO: Koch snowflake
             //Arc::new(HeighwayDragon::default()),*/
+
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()

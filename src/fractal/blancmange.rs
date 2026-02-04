@@ -36,7 +36,7 @@ where
         let Self { w } = self;
         InitView {
             exp: Complex::new(f!(w.re), f!(w.im)),
-            shift: Complex::one(),
+            shift: Complex::new(f!(0.0), f!(0.0)),
             ..Default::default()
         }
     }

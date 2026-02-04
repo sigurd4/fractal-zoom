@@ -71,17 +71,17 @@ fn main() -> anyhow::Result<()>
             //Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
             //Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
             // TODO: cantor triangle
-            Arc::new(Blancmange::default()), // TODO
+            //Arc::new(Blancmange::default()), // TODO
             Arc::new(Supergolden), // TODO
             Arc::new(Julia::clover()),
             Arc::new(Rauzy::default()), // TODO
             // TODO: gosper island
             Arc::new(Julia::dendrite()),
-            Arc::new(FibonacciSnowlake), // TODO: fail
+            //Arc::new(FibonacciSnowlake), // TODO: fail
             // TODO: Boundary of the tame twindragon
             Arc::new(Henon::default()),
             // TODO: Koch snowflake
-            Arc::new(HeighwayDragon::default()),
+            //Arc::new(HeighwayDragon::default()),
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()

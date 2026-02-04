@@ -154,10 +154,20 @@ where
     where
         T: Fractal<F>
     {
-        let zoom = f!(START_ZOOM);
-        let InitView { win_center, center, shift: _, exp: _ } = fractal.init_view(zoom, self.win_size);
-        self.win_center = win_center;
-        *self.center = center;
+        let Self { mouse_pos: _, win_size, win_center, center, shift: _, exp: _, zoom, rot, reverse, t0: _ } = View::new(fractal, self.win_size);
+
+        *self = Self {
+            mouse_pos: self.mouse_pos,
+            win_size,
+            win_center,
+            center,
+            shift: self.shift,
+            exp: self.exp,
+            zoom,
+            rot,
+            reverse,
+            t0: self.t0
+        }
     }
     
     pub fn win_size(&self) -> PhysicalSize<u32>

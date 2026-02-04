@@ -45,56 +45,56 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
             (z.x - floor(z.x)),
             (z.y - floor(z.y))
         );
-        d += pow(abs(1.0 - 2.0*abs(z.x - 0.5)), nf);
-        d += pow(abs(1.0 - 2.0*abs(z.y - 0.5)), nf);
-        let e = f32(u32(z.x > c));
-        if(z.x <= c)
+        //d += pow(abs(1.0 - 2.0*abs(z.x - 0.5)), nf);
+        //d += pow(abs(1.0 - 2.0*abs(z.y - 0.5)), nf);
+        var ok = false;
+        var stop = false;
+        z.x = cantor_dim(z.x, c, r_k.x, &ok, &stop);
+        z.y = cantor_dim(z.y, c, r_k.y, &ok, &stop);
+        if(!ok || stop)
         {
-            if(z.x > c - r_k.x)
-            {
-                break;
-            }
-            else
-            {
-                z.x /= c - r_k.x;
-            }
-        }
-        else
-        {
-            if(z.x < c + r_k.x)
-            {
-                break;
-            }
-            else
-            {
-                z.x = (z.x - 1.0)/(1.0 - c - r_k.x) + 1.0;
-            }
-        }
-        if(z.y <= c)
-        {
-            if(z.y > c - r_k.y)
-            {
-                break;
-            }
-            else
-            {
-                z.y /= c - r_k.y;
-            }
-        }
-        else
-        {
-            if(z.y < c + r_k.y)
-            {
-                break;
-            }
-            else
-            {
-                z.y = (z.y - 1.0)/(1.0 - c - r_k.y) + 1.0;
-            }
+            break;
         }
         r_k = cmul(r_k, r_lambda);
     }
     let m = f32(i) - sqrt(d);
 
     return colormap3(z, m);
+}
+
+fn cantor_dim(z: f32, c: f32, r: f32, ok: ptr<function, bool>, stop: ptr<function, bool>) -> f32
+{
+    let s = r < 0; // sierpinski carpet
+    if(z <= c)
+    {
+        if(z > c - abs(r))
+        {
+            if(!s)
+            {
+                *stop = true;
+            }
+            return (z - (c - abs(r)))/(2.0*abs(r));
+        }
+        else
+        {
+            *ok = true;
+            return (z - (c - 1.0 + abs(r)))/(0.5 - abs(r));
+        }
+    }
+    else
+    {
+        if(z < c + abs(r))
+        {
+            if(!s)
+            {
+                *stop = true;
+            }
+            return (z - (c - abs(r)))/(2.0*abs(r));
+        }
+        else
+        {
+            *ok = true;
+            return (z - (c + abs(r)))/(0.5 - abs(r));
+        }
+    }
 }

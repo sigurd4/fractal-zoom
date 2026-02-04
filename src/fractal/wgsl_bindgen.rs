@@ -2,7 +2,7 @@
 //
 // ^ wgsl_bindgen version 0.21.2
 // Changes made to this file will not be saved.
-// SourceHash: d29e3c1aa080ed71eabf7961c4fa16c0f738838ced2374c67d5e2712cbd15d44
+// SourceHash: fd5d0ea2187b1057883fa8c4b90accccd32d4937e177082d3261d29f70c6b10e
 
 #![allow(unused, non_snake_case, non_camel_case_types, non_upper_case_globals)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -770,6 +770,31 @@ fn colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(z_1: vec2<f32>, i_1: f32) -> vec4<f32
     return vec4<f32>(_e24, 0.8f);
 }
 
+fn cantor_dim(z_2: f32, c_1: f32, r: f32, ok_1: ptr<function, bool>, stop_1: ptr<function, bool>) -> f32 {
+    let s = (r < 0f);
+    if (z_2 <= c_1) {
+        if (z_2 > (c_1 - abs(r))) {
+            if !(s) {
+                (*stop_1) = true;
+            }
+            return ((z_2 - (c_1 - abs(r))) / (2f * abs(r)));
+        } else {
+            (*ok_1) = true;
+            return ((z_2 - ((c_1 - 1f) + abs(r))) / (0.5f - abs(r)));
+        }
+    } else {
+        if (z_2 < (c_1 + abs(r))) {
+            if !(s) {
+                (*stop_1) = true;
+            }
+            return ((z_2 - (c_1 - abs(r))) / (2f * abs(r)));
+        } else {
+            (*ok_1) = true;
+            return ((z_2 - (c_1 + abs(r))) / (0.5f - abs(r)));
+        }
+    }
+}
+
 @vertex 
 fn vs_main(in: VertexInputX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX) -> @builtin(position) vec4<f32> {
     let corner = (in.vertex_index % 3u);
@@ -788,6 +813,8 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     var r_k: vec2<f32>;
     var i: u32 = 1u;
     var d: f32 = 0f;
+    var ok: bool;
+    var stop: bool;
 
     let _e10 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.x;
     let _e15 = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.window_size.y;
@@ -800,11 +827,11 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
     z = (_e31 - _e34);
     let phi = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.shift;
     let lambda = globalsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX.exp;
-    let r = (vec2<f32>((phi.y - phi.x), (phi.y - phi.x)) / vec2(2f));
-    let _e53 = powcX_naga_oil_mod_XMNXW24DMMV4AX(r, lambda);
-    let _e54 = cmulX_naga_oil_mod_XMNXW24DMMV4AX(r, _e53);
+    let r_1 = (vec2<f32>((phi.y - phi.x), (phi.y - phi.x)) / vec2(2f));
+    let _e53 = powcX_naga_oil_mod_XMNXW24DMMV4AX(r_1, lambda);
+    let _e54 = cmulX_naga_oil_mod_XMNXW24DMMV4AX(r_1, _e53);
     r_k = _e54;
-    let c_1 = ((phi.y + phi.x) / 2f);
+    let c_2 = ((phi.y + phi.x) / 2f);
     let _e61 = max_iterationsX_naga_oil_mod_XM5WG6YTBNRPWE2LOMRUW4Z3TX();
     let n_1 = u32(_e61);
     loop {
@@ -819,73 +846,36 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32> {
             let _e73 = z.y;
             let _e75 = z.y;
             z = vec2<f32>((_e67 - floor(_e69)), (_e73 - floor(_e75)));
-            let _e80 = z.x;
-            let _e91 = d;
-            d = (_e91 + pow(abs((1f - (2f * abs((_e80 - 0.5f))))), _e61));
-            let _e94 = z.y;
-            let _e104 = d;
-            d = (_e104 + pow(abs((1f - (2f * abs((_e94 - 0.5f))))), _e61));
-            let _e107 = z.x;
-            let e = f32(u32((_e107 > c_1)));
-            let _e112 = z.x;
-            if (_e112 <= c_1) {
-                let _e115 = z.x;
-                let _e117 = r_k.x;
-                if (_e115 > (c_1 - _e117)) {
-                    break;
-                } else {
-                    let _e122 = r_k.x;
-                    let _e124 = z.x;
-                    z.x = (_e124 / (c_1 - _e122));
-                }
-            } else {
-                let _e127 = z.x;
-                let _e129 = r_k.x;
-                if (_e127 < (c_1 + _e129)) {
-                    break;
-                } else {
-                    let _e134 = z.x;
-                    let _e140 = r_k.x;
-                    z.x = (((_e134 - 1f) / ((1f - c_1) - _e140)) + 1f);
-                }
+            ok = false;
+            stop = false;
+            let _e85 = z.x;
+            let _e87 = r_k.x;
+            let _e88 = cantor_dim(_e85, c_2, _e87, (&ok), (&stop));
+            z.x = _e88;
+            let _e91 = z.y;
+            let _e93 = r_k.y;
+            let _e94 = cantor_dim(_e91, c_2, _e93, (&ok), (&stop));
+            z.y = _e94;
+            let _e95 = ok;
+            let _e97 = stop;
+            if (!(_e95) || _e97) {
+                break;
             }
-            let _e146 = z.y;
-            if (_e146 <= c_1) {
-                let _e149 = z.y;
-                let _e151 = r_k.y;
-                if (_e149 > (c_1 - _e151)) {
-                    break;
-                } else {
-                    let _e156 = r_k.y;
-                    let _e158 = z.y;
-                    z.y = (_e158 / (c_1 - _e156));
-                }
-            } else {
-                let _e161 = z.y;
-                let _e163 = r_k.y;
-                if (_e161 < (c_1 + _e163)) {
-                    break;
-                } else {
-                    let _e168 = z.y;
-                    let _e174 = r_k.y;
-                    z.y = (((_e168 - 1f) / ((1f - c_1) - _e174)) + 1f);
-                }
-            }
-            let _e179 = r_k;
-            let _e180 = cmulX_naga_oil_mod_XMNXW24DMMV4AX(_e179, _e53);
-            r_k = _e180;
+            let _e99 = r_k;
+            let _e100 = cmulX_naga_oil_mod_XMNXW24DMMV4AX(_e99, _e53);
+            r_k = _e100;
         }
         continuing {
-            let _e182 = i;
-            i = (_e182 + 1u);
+            let _e102 = i;
+            i = (_e102 + 1u);
         }
     }
-    let _e184 = i;
-    let _e186 = d;
-    let m = (f32(_e184) - sqrt(_e186));
-    let _e189 = z;
-    let _e190 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e189, m);
-    return _e190;
+    let _e105 = i;
+    let _e107 = d;
+    let m = (f32(_e105) - sqrt(_e107));
+    let _e110 = z;
+    let _e111 = colormap3X_naga_oil_mod_XMNXWY33SNVQXAX(_e110, m);
+    return _e111;
 }
 "#;
 }

@@ -27,6 +27,14 @@ impl Cantor
     {
         Self::symmetric(1.0/3.0)
     }
+    pub fn sierpinski(self) -> Self
+    {
+        let Self { phi, lambda } = self;
+        Self {
+            phi: phi.end..phi.start,
+            lambda
+        }
+    }
     /// C := C/((k + (1 - γ)/2)γⁿ, (k + (1 + γ)/2)γⁿ)
     pub fn symmetric(gamma: f64) -> Self
     {
@@ -58,7 +66,7 @@ impl Cantor
     {
         Self {
             phi: r,
-            lambda: Complex::one()
+            lambda: Complex::from(1.0)
         }
     }
 

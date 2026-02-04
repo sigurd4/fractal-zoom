@@ -62,12 +62,16 @@ fn main() -> anyhow::Result<()>
         [
             Arc::new(Feigenbaum::default()),
             Arc::new(Cantor::cantor()),
+            Arc::new(Cantor::cantor().sierpinski()),
             Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
+            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()),
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)),
+            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0).sierpinski()),
             Arc::new(FibonacciHamiltonian::default()),
-            Arc::new(Cantor::smith_volterra()), // TODO
+            //Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
+            //Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
             // TODO: cantor triangle
-            /*Arc::new(Blancmange::default()), // TODO
+            Arc::new(Blancmange::default()), // TODO
             Arc::new(Supergolden), // TODO
             Arc::new(Julia::clover()),
             Arc::new(Rauzy::default()), // TODO
@@ -77,7 +81,7 @@ fn main() -> anyhow::Result<()>
             // TODO: Boundary of the tame twindragon
             Arc::new(Henon::default()),
             // TODO: Koch snowflake
-            Arc::new(HeighwayDragon::default()),*/
+            Arc::new(HeighwayDragon::default()),
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()

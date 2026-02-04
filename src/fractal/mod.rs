@@ -10,10 +10,13 @@ moddef::moddef!(
         feigenbaum,
         fibonacci_hamiltonian,
         julia,
+        henon,
         mandelbrot,
+        heighway_dragon,
         pendulum,
         rauzy,
-        supergolden
+        supergolden,
+        fibonacci_snowflake
     }
 );
 

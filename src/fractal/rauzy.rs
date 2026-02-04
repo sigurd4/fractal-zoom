@@ -27,13 +27,16 @@ impl Default for Rauzy
     }
 }
 
-impl Fractal for Rauzy
+impl<F> Fractal<F> for Rauzy
+where
+    F: MyFloat
 {
-    const LABEL: &str = "rauzy";
+    fn label(&self) -> &'static str
+    {
+        "rauzy"
+    }
 
-    fn init_view<F>(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
-    where
-        F: MyFloat
+    fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
         let Self { f, lambda } = self;
 
@@ -56,7 +59,7 @@ impl Fractal for Rauzy
         let vertex_entry = rauzy::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some(Self::LABEL),
+            label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
             vertex: rauzy::vertex_state(&shader, &vertex_entry),
             fragment: Some(rauzy::fragment_state(&shader, &rauzy::fs_main_entry([

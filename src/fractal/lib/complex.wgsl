@@ -1,3 +1,11 @@
+fn conj(z: vec2<f32>) -> vec2<f32>
+{
+    return vec2(
+        z.x,
+        -z.y
+    );
+}
+
 fn cis(rot: f32) -> vec2<f32>
 {
     return vec2(

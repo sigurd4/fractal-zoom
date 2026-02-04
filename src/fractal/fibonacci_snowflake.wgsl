@@ -1,6 +1,6 @@
 #import global_bindings::{GlobalUniforms, VertexInput, globals, max_iterations, view_radius, epsilon};
 #import colormap::colormap3;
-#import complex::{cmul, cis, norm_sqr, norm, powc}
+#import complex::{cmul, cis, norm_sqr, norm, powc, conj, cdiv}
 
 @vertex
 fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
@@ -20,35 +20,37 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
     let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
 
-    let a = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
-    var z = globals.shift;
-    let b = globals.exp;
-    let r = max(1.0, norm_sqr(z));
+    var z = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
+    var c = globals.shift;
+    let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
     
-    let n = u32(max_iterations());
+    var n = max_iterations();
     var i: u32 = 0;
-    if norm_sqr(z) <= r*4.0
+    var m_prev: u32 = 1;
+    var m: u32 = 1;
+    var z_prev = z + c;
+    for(; i < u32(n) && norm_sqr(z) < r*4.0; i++)
     {
-        var z_prev = z;
-        z = a;
-        i++;
-        if norm_sqr(z) <= r*4.0
+        let m_next = m_prev + m;
+        m_prev = m;
+        m = m_next;
+
+        var v = z - z_prev + c;
+        if((m_prev % 2 == 0) == (m % 2 == 0))
         {
-            let z_next = cmul(z, z_prev) + b;
-            var z_prev_prev = z_prev;
-            z_prev = z;
-            z = z_next;
-            i++;
-            for(; i < n && norm_sqr(z) <= r*4.0; i++)
+            if(i % 2 == 0)
             {
-                let z_next = cmul(z, z_prev_prev) - z_prev;
-                z_prev_prev = z_prev;
-                z_prev = z;
-                z = z_next;
+                v = cmul(v, globals.exp);
+            }
+            else if(i % 2 == 1)
+            {
+                v = cmul(v, conj(globals.exp));
             }
         }
+        z_prev = z;
+        z += v;
     }
-    let m = f32(i) - log(log(norm(z)))/log(norm(globals.exp));
+    let mag = f32(i) - log(log(norm(z)))/log(norm(globals.exp));
 
-    return colormap3(z, m);
+    return colormap3(z, mag);
 }

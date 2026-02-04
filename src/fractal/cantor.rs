@@ -11,6 +11,7 @@ use super::wgsl_bindgen::cantor;
 /// K = 1 + nλ
 /// r = φ₂ - φ₁
 /// C := C/((k + (φ₂ + φ₁ - rᴷ)/2)rᴷⁿ, (k + (φ₂ + φ₁ + rᴷ)/2)rᴷⁿ)
+/// rᴷⁿ_prev/rᴷⁿ = r^(1 + (2n - 1)λ)
 #[derive(Clone)]
 pub struct Cantor
 {

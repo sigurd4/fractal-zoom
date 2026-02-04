@@ -61,15 +61,23 @@ fn main() -> anyhow::Result<()>
     let fractals = (
         [
             Arc::new(Feigenbaum::default()),
-            Arc::new(Cantor::cantor()), // TODO
-            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)), // TODO
-            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)), // TODO
+            Arc::new(Cantor::cantor()),
+            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
+            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)),
             Arc::new(FibonacciHamiltonian::default()),
             Arc::new(Cantor::smith_volterra()), // TODO
             // TODO: cantor triangle
-            Arc::new(Blancmange::default()), // TODO
-            Arc::new(Supergolden), // TODO,
-            Arc::new(Julia::clover())
+            /*Arc::new(Blancmange::default()), // TODO
+            Arc::new(Supergolden), // TODO
+            Arc::new(Julia::clover()),
+            Arc::new(Rauzy::default()), // TODO
+            // TODO: gosper island
+            Arc::new(Julia::dendrite()),
+            Arc::new(FibonacciSnowlake), // TODO: fail
+            // TODO: Boundary of the tame twindragon
+            Arc::new(Henon::default()),
+            // TODO: Koch snowflake
+            Arc::new(HeighwayDragon::default()),*/
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()

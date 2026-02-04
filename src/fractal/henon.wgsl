@@ -20,33 +20,15 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
     let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
 
-    let a = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
-    var z = globals.shift;
-    let b = globals.exp;
-    let r = max(1.0, norm_sqr(z));
+    var z = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
+    let c = globals.shift;
+    let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
     
-    let n = u32(max_iterations());
+    var n = max_iterations();
     var i: u32 = 0;
-    if norm_sqr(z) <= r*4.0
+    for(; i < u32(n) && norm_sqr(z) < r*4.0; i++)
     {
-        var z_prev = z;
-        z = a;
-        i++;
-        if norm_sqr(z) <= r*4.0
-        {
-            let z_next = cmul(z, z_prev) + b;
-            var z_prev_prev = z_prev;
-            z_prev = z;
-            z = z_next;
-            i++;
-            for(; i < n && norm_sqr(z) <= r*4.0; i++)
-            {
-                let z_next = cmul(z, z_prev_prev) - z_prev;
-                z_prev_prev = z_prev;
-                z_prev = z;
-                z = z_next;
-            }
-        }
+        z = vec2(1.0 + z.y, z.x*globals.shift.y) - powc(vec2(z.x, 0.0), globals.exp)*globals.shift.x;
     }
     let m = f32(i) - log(log(norm(z)))/log(norm(globals.exp));
 

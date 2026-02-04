@@ -1,4 +1,4 @@
-#import global_bindings::{GlobalUniforms, VertexInput, globals, max_iterations, view_radius, epsilon};
+#import global_bindings::{GlobalUniforms, VertexInput, z_in, exp_in, shift_in, globals, max_iterations, view_radius, epsilon};
 #import colormap::colormap3;
 #import complex::{cmul, cis, norm_sqr, norm, powc}
 
@@ -18,11 +18,9 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
-    let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
-
-    let e = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
-    var z = globals.shift;
-    let lambda = globals.exp;
+    let e = z_in(position);
+    var z = shift_in();
+    let lambda = exp_in();
     let r = max(1.0, norm_sqr(z));
     
     let n = u32(max_iterations());
@@ -47,7 +45,8 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
             }
         }
     }
-    let m = f32(i) - log(log(norm(z)))/log(norm(globals.exp));
+    let m = f32(i) - f32(log(log(norm(z)))/log(norm(lambda)));
+    let zz = vec2(f32(z.x), f32(z.y));
 
-    return colormap3(z, m);
+    return colormap3(zz, m);
 }

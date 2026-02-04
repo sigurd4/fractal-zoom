@@ -123,7 +123,7 @@ where
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
             multiview_mask: None,
-            cache: None
+            cache: None,
             // ... other pipeline state
         })
     }

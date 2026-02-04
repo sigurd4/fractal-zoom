@@ -1,4 +1,4 @@
-#import global_bindings::{GlobalUniforms, VertexInput, wrap, globals, max_iterations, view_radius, epsilon};
+#import global_bindings::{GlobalUniforms, VertexInput, z_in, shift_in, exp_in, wrap, globals, max_iterations, view_radius, epsilon};
 #import colormap::colormap3;
 #import complex::{cmul, cis, norm_sqr, norm, powc, cdiv}
 #import consts::PI;
@@ -19,12 +19,9 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
-    let pos = position.xy/position.w - vec2(f32(globals.window_size.x), f32(globals.window_size.y))/2.0;
-
-    var z = cmul(pos/globals.zoom, cis(globals.rot)) - globals.center;
-    //let phi = vec2(atan(globals.shift.x)/PI + 0.5, atan(globals.shift.y)/PI + 0.5);
-    let phi = globals.shift;
-    let lambda = globals.exp;
+    var z = z_in(position);
+    let phi = shift_in();
+    let lambda = exp_in();
 
     let r = vec2(phi.y - phi.x, phi.y - phi.x)/2.0;
     let r_lambda = powc(r, lambda);
@@ -34,7 +31,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     let nf = max_iterations();
     let n: u32 = u32(nf);
     var i: u32 = 1;
-    var d = 0.0;
+    var d: f64 = 0.0;
     for(; i < n; i++)
     {
         // c = φ₂ + φ₁
@@ -57,12 +54,13 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
         }
         r_k = cmul(r_k, r_lambda);
     }
-    let m = f32(i) - sqrt(d);
+    let m = f32(i) - f32(sqrt(d));
+    let zz = vec2(f32(z.x), f32(z.y));
 
-    return colormap3(z, m);
+    return vec4(m, m, m, 1.0);
 }
 
-fn cantor_dim(z: f32, c: f32, r: f32, ok: ptr<function, bool>, stop: ptr<function, bool>) -> f32
+fn cantor_dim(z: f64, c: f64, r: f64, ok: ptr<function, bool>, stop: ptr<function, bool>) -> f64
 {
     let s = r < 0; // sierpinski carpet
     if(z <= c)

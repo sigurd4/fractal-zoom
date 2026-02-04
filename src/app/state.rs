@@ -396,7 +396,7 @@ impl Render
             required_features: wgpu::Features::TEXTURE_COMPRESSION_BC
                 | wgpu::Features::IMMEDIATES
                 | wgpu::Features::TEXTURE_BINDING_ARRAY
-                //| wgpu::Features::SHADER_F64
+                | wgpu::Features::SHADER_F64
                 ,
             required_limits: wgpu::Limits {
                 max_immediate_size: 128,

@@ -1,6 +1,5 @@
 use core::{fmt::Display, ops::RangeInclusive};
 
-use linspace::Linspace;
 use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::{distr::{uniform::SampleUniform}};
 use winit::{application::ApplicationHandler, dpi::LogicalSize, event::WindowEvent, event_loop::ActiveEventLoop, window::{Fullscreen, Window, WindowId}};
@@ -52,7 +51,6 @@ where
 impl<F, Z, G> ApplicationHandler<()> for App<F, Z, G>
 where
     F: MyFloat,
-    RangeInclusive<F>: Linspace<F>,
     G: IntoIterator<Item = Z>,
     Z: Fractal<F>
 {

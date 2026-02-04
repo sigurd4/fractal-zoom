@@ -1,3 +1,5 @@
+use std::{fs::File, io::{Read, Write}};
+
 use miette::IntoDiagnostic;
 use wgsl_bindgen::{AdditionalScanDirectory, WgslBindgenOptionBuilder, WgslShaderIrCapabilities, WgslTypeSerializeStrategy};
 
@@ -27,5 +29,23 @@ fn main() -> miette::Result<()>
         .build()?
         .generate()
         .into_diagnostic()?;
+
+    // Open and read the file entirely
+    let mut src = File::open("src/fractal/wgsl_bindgen.rs")
+        .into_diagnostic()?;
+    let mut data = String::new();
+    src.read_to_string(&mut data)
+        .into_diagnostic()?;
+    drop(src);  // Close the file early
+
+    // Run the replace operation in memory
+    let new_data = data.replace("push_constant_ranges: &[]", "immediate_size: 0");
+
+    // Recreate the file and dump the processed contents to it
+    let mut dst = File::create("src/fractal/wgsl_bindgen.rs")
+        .into_diagnostic()?;
+    dst.write(new_data.as_bytes())
+        .into_diagnostic()?;
+
     Ok(())
 }

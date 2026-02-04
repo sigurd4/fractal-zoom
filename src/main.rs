@@ -79,7 +79,7 @@ fn main() -> anyhow::Result<()>
             Arc::new(Julia::dendrite()),
             //Arc::new(FibonacciSnowlake), // TODO: fail
             // TODO: Boundary of the tame twindragon
-            Arc::new(Henon::default()),
+            //Arc::new(Henon::default()),
             // TODO: Koch snowflake
             //Arc::new(HeighwayDragon::default()),
         ] as [Arc<dyn Fractal<f64>>; _]

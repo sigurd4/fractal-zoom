@@ -1,7 +1,6 @@
 use core::{fmt::Display, ops::RangeInclusive};
 use std::{sync::{Arc, UniqueArc}, time::SystemTime};
 
-use linspace::Linspace;
 use num_complex::Complex;
 use num_traits::{Float, FloatConst, NumAssignOps, float::FloatCore};
 use rand::distr::uniform::SampleUniform;
@@ -124,8 +123,6 @@ where
         window_id: winit::window::WindowId,
         event: WindowEvent,
     ) -> AppAction
-    where
-        RangeInclusive<F>: Linspace<F>
     {
         if window_id != self.render.window.id()
         {
@@ -309,8 +306,7 @@ where
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError>
     where
-        F: NumAssignOps + SampleUniform + FloatCore + FloatConst,
-        RangeInclusive<F>: Linspace<F>
+        F: NumAssignOps + SampleUniform + FloatCore + FloatConst
     {
         let output = self.render.surface.get_current_texture()?;
         let output_view = output.texture.create_view(
@@ -328,10 +324,11 @@ where
                 depth_slice: None,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                     store: wgpu::StoreOp::Store,
                 },
             })],
+            multiview_mask: None,
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
@@ -397,11 +394,12 @@ impl Render
         let (device, queue) = adapter.request_device(&wgpu::DeviceDescriptor {
             label: None,
             required_features: wgpu::Features::TEXTURE_COMPRESSION_BC
-                | wgpu::Features::PUSH_CONSTANTS
+                | wgpu::Features::IMMEDIATES
                 | wgpu::Features::TEXTURE_BINDING_ARRAY
-                | wgpu::Features::SHADER_F64,
+                //| wgpu::Features::SHADER_F64
+                ,
             required_limits: wgpu::Limits {
-                max_push_constant_size: 128,
+                max_immediate_size: 128,
                 max_binding_array_elements_per_shader_stage: 4,
                 max_binding_array_sampler_elements_per_shader_stage: 4,
                 ..Default::default()

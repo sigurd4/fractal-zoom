@@ -21,10 +21,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     var c = z_in(position);
     var z = shift_in();
     let e = exp_in();
-<<<<<<< HEAD
     var w = vec2(1.0, 0.0);
-=======
->>>>>>> b6928a2 (Try to add f64 (it crashes))
     let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
     
     let n = u32(max_iterations());
@@ -33,15 +30,15 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     {
         c *= 2.0;
         z += cmul(vec2(triangle(c.x), triangle(c.y)), w);
-        w = cmul(w, globals.exp);
+        w = cmul(w, e);
     }
-    let m = f32(i) - f32(log(log(norm(z)))/log(1.0/norm(e)));
+    let mag = f32(i) + f32(log(log(norm(z)))/log(norm(e)));
     let zz = vec2(f32(z.x), f32(z.y));
 
-    return colormap3(zz, m);
+    return colormap3(zz, mag);
 }
 
-fn triangle(r: f64) -> f64
+fn triangle(r: f32) -> f32
 {
     return 2.0*abs(2.0*(r - floor(r + 0.5))) - 1.0;
 }

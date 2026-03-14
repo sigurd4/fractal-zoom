@@ -36,7 +36,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     return colormap3(zz, m);
 }
 
-fn triangle(z: f64) -> f64
+fn triangle(z: f32) -> f32
 {
     return z - round(z);
 }

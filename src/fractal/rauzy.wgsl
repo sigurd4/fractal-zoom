@@ -46,7 +46,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
             }
         }
     }
-    let m = f32(f64(i) - log(log(norm(z)))/log(norm(b)));
+    let m = f32(f32(i) - log(log(norm(z)))/log(norm(b)));
     let zz = vec2(f32(z.x), f32(z.y));
 
     return colormap3(zz, m);

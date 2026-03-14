@@ -60,9 +60,9 @@ fn main() -> anyhow::Result<()>
 
     let fractals = (
         [
-            //Arc::new(Feigenbaum::default()),
-            Arc::new(Cantor::cantor()),
-            Arc::new(Cantor::cantor().sierpinski()),
+            Arc::new(Feigenbaum::default()),
+            //Arc::new(Cantor::cantor()),
+            /*Arc::new(Cantor::cantor().sierpinski()),
             Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
             Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()),
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)),
@@ -70,7 +70,7 @@ fn main() -> anyhow::Result<()>
             Arc::new(FibonacciHamiltonianJulia::default()),
             Arc::new(FibonacciHamiltonianMandelbrot::default()), // unknown hausdorf dim
             Arc::new(SupergoldenJulia),
-            Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim
+            Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim*/
             /*Arc::new(Julia::clover()),
             Arc::new(Rauzy::default()), // TODO
             //Arc::new(FibonacciHamiltonian::default()),

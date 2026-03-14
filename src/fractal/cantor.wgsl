@@ -31,7 +31,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     let nf = max_iterations();
     let n: u32 = u32(nf);
     var i: u32 = 1;
-    var d: f64 = 0.0;
+    var d: f32 = 0.0;
     for(; i < n; i++)
     {
         // c = φ₂ + φ₁
@@ -60,7 +60,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     return vec4(m, m, m, 1.0);
 }
 
-fn cantor_dim(z: f64, c: f64, r: f64, ok: ptr<function, bool>, stop: ptr<function, bool>) -> f64
+fn cantor_dim(z: f32, c: f32, r: f32, ok: ptr<function, bool>, stop: ptr<function, bool>) -> f32
 {
     let s = r < 0; // sierpinski carpet
     if(z <= c)

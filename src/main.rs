@@ -48,6 +48,8 @@ const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip()*100.0;
 const ZOOM_MUL: f64 = 0.1;
 const ZOOM_BASE: f64 = 1e4;
 const MAX_ITERATIONS: u32 = 32;
+const MIN_MAX_ITERATIONS: u32 = 32;
+const REFRESH_RATE: f64 = 30.0;
 
 const SHIFT_ZOOM_VARIANCE: f64 = 1.1;
 const EXP_ZOOM_VARIANCE: f64 = 1.1;
@@ -63,31 +65,27 @@ fn main() -> anyhow::Result<()>
             Arc::new(Feigenbaum::default()),
             Arc::new(Cantor::cantor()),
             Arc::new(Cantor::cantor().sierpinski()),
-            /*Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
+            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
             Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()),
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)),
             Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0).sierpinski()),
             Arc::new(FibonacciHamiltonianJulia::default()),
             Arc::new(FibonacciHamiltonianMandelbrot::default()), // unknown hausdorf dim
-            Arc::new(SupergoldenJulia),
-            Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim*/
-            /*Arc::new(Julia::clover()),
-            Arc::new(Rauzy::default()), // TODO
-            //Arc::new(FibonacciHamiltonian::default()),
-            //Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
-            //Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
+            Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
+            Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
             // TODO: cantor triangle
-            //Arc::new(Blancmange::default()), // TODO
-            //Arc::new(Supergolden), // TODO
-            //Arc::new(Julia::clover()),
-            //Arc::new(Rauzy::default()), // TODO
+            Arc::new(Blancmange::default()), // TODO
+            Arc::new(SupergoldenJulia),
+            Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim
+            Arc::new(Julia::clover()),
+            Arc::new(Rauzy::default()), // TODO
             // TODO: gosper island
             //Arc::new(Julia::dendrite()),
             //Arc::new(FibonacciSnowlake), // TODO: fail
             // TODO: Boundary of the tame twindragon
             //Arc::new(Henon::default()),
             // TODO: Koch snowflake
-            //Arc::new(HeighwayDragon::default()),*/
+            //Arc::new(HeighwayDragon::default()), // TODO: fail
 
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()

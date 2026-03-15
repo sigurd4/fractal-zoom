@@ -7,7 +7,7 @@ use rand::distr::uniform::SampleUniform;
 use wgpu::{SurfaceConfiguration, util::DeviceExt};
 use winit::{dpi::{PhysicalPosition, PhysicalSize, Size}, event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::{Fullscreen, Window}};
 
-use crate::{MOVE_CENTER_ACCEL, MOVE_EXP_ACCEL, MOVE_SHIFT_ACCEL, MOVE_ZOOM_ACCEL, MyFloat, ROT_ACCEL, ZOOM_MUL, app::{AppAction, MoveDirection, RotateDirection, ZoomDirection, view::View}, f, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
+use crate::{MOVE_CENTER_ACCEL, MOVE_EXP_ACCEL, MOVE_SHIFT_ACCEL, MOVE_ZOOM_ACCEL, MyFloat, ROT_ACCEL, ZOOM_MUL, app::{AppAction, FpsMonitor, MoveDirection, RotateDirection, ZoomDirection, view::View}, f, fractal::{Fractal, GlobalUniforms, VertexInput, WgpuBindGroup0, WgpuBindGroup0Entries, WgpuBindGroup0EntriesParams}};
 
 #[derive(Debug)]
 pub struct State<F, Z>
@@ -18,6 +18,7 @@ where
     fractal: Z,
     view: View<F>,
     render: Render,
+    fps_monitor: FpsMonitor,
     global_uniforms_buffer: wgpu::Buffer,
     global_bind_group: WgpuBindGroup0,
     vertex_buffer: wgpu::Buffer,
@@ -34,23 +35,23 @@ where
         F: SampleUniform
     {
         let render = Render::new(window).await?;
-        Self::from_parts(render, fractal)
+        Self::from_parts(render, FpsMonitor::default(), fractal)
     }
 
     pub fn with_fractal<X>(self, fractal: X) -> anyhow::Result<State<F, X>>
     where
         X: Fractal<F>
     {
-        let Self { render: render, .. } = self;
-        State::from_parts(render, fractal)
+        let Self { render, fps_monitor, .. } = self;
+        State::from_parts(render, fps_monitor, fractal)
     }
 
-    fn from_parts(render: Render, fractal: Z) -> anyhow::Result<Self>
+    fn from_parts(render: Render, fps_monitor: FpsMonitor, fractal: Z) -> anyhow::Result<Self>
     {
         let size = render.window.inner_size();
         let view = View::new(&fractal, size);
 
-        let global_uniforms = view.uniforms();
+        let global_uniforms = view.uniforms(&fps_monitor);
 
         let global_uniforms_buffer = render.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Global uniforms buffer"),
@@ -84,6 +85,7 @@ where
             fractal,
             view,
             render,
+            fps_monitor,
             global_uniforms_buffer,
             global_bind_group,
             vertex_buffer,
@@ -107,7 +109,7 @@ where
         self.view.update()?;
 
         // Update global uniforms with new frame size immediately
-        let global_uniforms = self.view.uniforms();
+        let global_uniforms = self.view.uniforms(&self.fps_monitor);
 
         self.render.queue.write_buffer(
             &self.global_uniforms_buffer,
@@ -298,7 +300,7 @@ where
             WindowEvent::Destroyed => event_loop.exit(),
             _ => {
                 self.render.window.request_redraw();
-            }
+            },
         };
         self.update().expect("Error: ");
         AppAction::Idle
@@ -344,6 +346,7 @@ where
         self.render.queue.submit(core::iter::once(encoder.finish()));
 
         output.present();
+        self.fps_monitor.update();
         Ok(())
     }
 

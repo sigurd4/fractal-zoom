@@ -8,6 +8,7 @@ use crate::{MyFloat, fractal::{self, Fractal}};
 
 moddef::moddef!(
     flat(pub) mod {
+        fps_monitor,
         view,
         state
     }

@@ -1,10 +1,11 @@
+use core::time::Duration;
 use std::time::SystemTime;
 
 use num_complex::Complex;
 use num_traits::{Float, Zero};
 use winit::{dpi::{PhysicalPosition, PhysicalSize}, event::ElementState};
 
-use crate::{EXP_ZOOM_VARIANCE, MAX_ITERATIONS, MOVE_CENTER_SPEED, MOVE_EXP_SPEED, MOVE_SHIFT_SPEED, MyFloat, ROT_SPEED, SHIFT_ZOOM_VARIANCE, START_ZOOM, ZOOM_MUL, f, fractal::{Fractal, GlobalUniforms}};
+use crate::{EXP_ZOOM_VARIANCE, MAX_ITERATIONS, MIN_MAX_ITERATIONS, MOVE_CENTER_SPEED, MOVE_EXP_SPEED, MOVE_SHIFT_SPEED, MyFloat, REFRESH_RATE, ROT_SPEED, SHIFT_ZOOM_VARIANCE, START_ZOOM, ZOOM_MUL, app::{FpsMonitor, fps_monitor}, f, fractal::{Fractal, GlobalUniforms}};
 
 moddef::moddef!(
     flat(pub) mod {
@@ -70,6 +71,7 @@ where
     {
         let zoom = f!(START_ZOOM);
         let InitView { win_center, center, shift, exp } = fractal.init_view(zoom, win_size);
+        
         Self {
             mouse_pos: None,
             win_center,
@@ -84,12 +86,12 @@ where
         }
     }
 
-    pub fn uniforms(&self) -> GlobalUniforms
+    pub fn uniforms(&self, fps_monitor: &FpsMonitor) -> GlobalUniforms
     {
         GlobalUniforms {
             time: SystemTime::now().duration_since(self.t0).unwrap().as_secs_f32(),
             _pad_time: [0; _],
-            max_iterations: MAX_ITERATIONS,
+            max_iterations: fps_monitor.max_iterations(),
             _pad_max_iterations: [0; _],
             window_size: glam::uvec2(self.win_size.width, self.win_size.height),
             center: glam::vec2(self.center.re.to_f32().unwrap(), self.center.im.to_f32().unwrap()),

@@ -63,35 +63,35 @@ fn main() -> anyhow::Result<()>
 
     let fractals = (
         [
-            Arc::new(Feigenbaum::default()),
-            Arc::new(Cantor::cantor()),
-            Arc::new(Cantor::cantor().sierpinski()),
-            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)),
-            Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()),
-            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)),
-            Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0).sierpinski()),
-            Arc::new(FibonacciHamiltonianJulia::default()),
-            Arc::new(FibonacciHamiltonianMandelbrot::default()), // unknown hausdorf dim
-            Arc::new(Cantor::smith_volterra()), // TODO (convergance?)
-            Arc::new(Cantor::smith_volterra().sierpinski()), // TODO (convergance?)
+            Arc::new(Feigenbaum::default()), // OK
+            Arc::new(Cantor::cantor()), // OK
+            Arc::new(Cantor::cantor().sierpinski()), // OK
+            //Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)), // Boring
+            //Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()), // Boring
+            //Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)), // Boring
+            //Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0).sierpinski()),// Boring
+            Arc::new(FibonacciHamiltonianJulia::default()), // Ok
+            Arc::new(FibonacciHamiltonianMandelbrot::default()), // Ok
+            //Arc::new(Cantor::smith_volterra()), // Broken
+            //Arc::new(Cantor::smith_volterra().sierpinski()), // Broken
             // TODO: cantor triangle
             Arc::new(Blancmange::default()), // TODO
-            Arc::new(SupergoldenJulia),
+            /*Arc::new(SupergoldenJulia),
             Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim
             Arc::new(Julia::clover()),
             Arc::new(Rauzy::default()), // TODO
             // TODO: gosper island
-            //Arc::new(Julia::dendrite()),
-            //Arc::new(FibonacciSnowlake), // TODO: fail
+            Arc::new(Julia::dendrite()),
+            Arc::new(FibonacciSnowlake), // TODO: fail
             // TODO: Boundary of the tame twindragon
-            //Arc::new(Henon::default()),
+            Arc::new(Henon::default()),
             // TODO: Koch snowflake
-            //Arc::new(HeighwayDragon::default()), // TODO: fail
+            Arc::new(HeighwayDragon::default()), // TODO: fail
 
-            Arc::new(BurningShip),
+            Arc::new(BurningShip), // OK
             Arc::new(Cesaro::levyc()),
             Arc::new(KochPeano::koch()),
-            Arc::new(KochPeano::peano()),
+            Arc::new(KochPeano::peano()),*/
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()

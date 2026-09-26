@@ -19,20 +19,21 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
     var c = z_in(position);
-    var z = shift_in();
-    let e = exp_in();
-    var w = vec2(1.0, 0.0);
+    let s = exp_in();
+    let w = shift_in();
+    var z = vec2(f32(0.0), f32(0.0));
+    var t = vec2(f32(1.0), f32(0.0));
     let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
     
     let n = u32(max_iterations());
     var i: u32 = 0;
     for(; i < n && norm_sqr(z) < r*4.0; i++)
     {
-        c *= 2.0;
-        z += cmul(vec2(triangle(c.x), triangle(c.y)), w);
-        w = cmul(w, e);
+        t = cmul(t, w) + vec2(triangle(c.x), triangle(c.y));
+        z += t;
+        c = cmul(c, s);
     }
-    let mag = f32(i) + f32(log(log(norm(z)))/log(norm(e)));
+    let mag = f32(i) + f32(log(log(norm(z)))/log(norm(w)));
     let zz = vec2(f32(z.x), f32(z.y));
 
     return colormap3(zz, mag);

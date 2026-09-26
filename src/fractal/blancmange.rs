@@ -9,7 +9,8 @@ use super::wgsl_bindgen::blancmange;
 #[derive(Clone, Copy)]
 pub struct Blancmange
 {
-    w: Complex<f64>
+    w: Complex<f64>,
+    s: Complex<f64>
 }
 
 impl Default for Blancmange
@@ -17,7 +18,8 @@ impl Default for Blancmange
     fn default() -> Self
     {
         Self {
-            w: Complex::new(0.5, 0.0)
+            w: Complex::new(0.5, 0.0),
+            s: Complex::new(2.0, 0.0)
         }
     }
 }
@@ -33,10 +35,10 @@ where
 
     fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
-        let Self { w } = self;
+        let Self { w, s } = self;
         InitView {
-            exp: Complex::new(f!(w.re), f!(w.im)),
-            shift: Complex::new(f!(0.0), f!(0.0)),
+            exp: Complex::new(f!(s.re), f!(s.im)),
+            shift: Complex::new(f!(w.re), f!(w.im)),
             ..Default::default()
         }
     }

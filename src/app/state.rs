@@ -81,6 +81,8 @@ where
             usage: wgpu::BufferUsages::VERTEX,
         });
 
+        println!("Fractal: '{}'", fractal.label());
+
         Ok(Self {
             fractal,
             view,

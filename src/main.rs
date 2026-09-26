@@ -1,6 +1,7 @@
 #![feature(trait_alias)]
 #![feature(iter_next_chunk)]
 #![feature(unique_rc_arc)]
+#![feature(more_float_constants)]
 
 use core::{f32::EPSILON, f64::consts::TAU, fmt::{Debug, Display}, ops::Range};
 use std::sync::Arc;
@@ -87,6 +88,10 @@ fn main() -> anyhow::Result<()>
             // TODO: Koch snowflake
             //Arc::new(HeighwayDragon::default()), // TODO: fail
 
+            Arc::new(BurningShip),
+            Arc::new(Cesaro::levyc()),
+            Arc::new(KochPeano::koch()),
+            Arc::new(KochPeano::peano()),
         ] as [Arc<dyn Fractal<f64>>; _]
     ).into_iter()
         .rev()

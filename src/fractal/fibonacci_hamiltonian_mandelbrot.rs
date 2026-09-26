@@ -19,10 +19,9 @@ impl Default for FibonacciHamiltonianMandelbrot
 {
     fn default() -> Self
     {
-        let phi = (5.0f64.sqrt() + 1.0)/2.0;
         Self {
-            f: Complex::from((1.0 + SQRT_2).ln()/phi.ln()),
-            lambda: Complex::zero()
+            f: Complex::from(0.0),
+            lambda: Complex::one()
         }
     }
 }

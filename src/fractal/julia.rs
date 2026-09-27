@@ -12,6 +12,16 @@ pub struct Julia
     c: Complex<f64>
 }
 
+impl Default for Julia
+{
+    fn default() -> Self
+    {
+        Self {
+            c: Complex { re: -0.74, im: -0.11 }
+        }
+    }
+}
+
 impl Julia
 {
     pub fn dendrite() -> Self

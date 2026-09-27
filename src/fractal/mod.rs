@@ -15,6 +15,7 @@ moddef::moddef!(
         julia,
         henon,
         ikeda,
+        roessler,
         koch_peano,
         mandelbrot,
         heighway_dragon,
@@ -36,14 +37,14 @@ use num_traits::Zero;
 use wgsl_bindgen::global_bindings;
 
 pub use global_bindings::GlobalUniforms;
+pub use global_bindings::VertexInput;
 pub use global_bindings::WgpuBindGroup0;
 pub use global_bindings::WgpuBindGroup0Entries;
 pub use global_bindings::WgpuBindGroup0EntriesParams;
-pub use global_bindings::VertexInput;
 use winit::dpi::PhysicalSize;
 
-use crate::app::InitView;
 use crate::MyFloat;
+use crate::app::InitView;
 
 pub trait Fractal<F>
 where
@@ -53,11 +54,7 @@ where
 
     fn init_view(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>;
 
-    fn setup_render_pipeline(
-        &self,
-        device: &wgpu::Device,
-        surface_format: wgpu::TextureFormat
-    ) -> wgpu::RenderPipeline;
+    fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline;
 }
 
 impl<F, T> Fractal<F> for Box<T>
@@ -69,22 +66,17 @@ where
     {
         self.deref().label()
     }
-    
+
     fn init_view(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>
     {
         self.deref().init_view(zoom, win_size)
     }
-    
-    fn setup_render_pipeline(
-        &self,
-        device: &wgpu::Device,
-        surface_format: wgpu::TextureFormat
-    ) -> wgpu::RenderPipeline
+
+    fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         self.deref().setup_render_pipeline(device, surface_format)
     }
 }
-
 
 impl<F, T> Fractal<F> for Arc<T>
 where
@@ -95,17 +87,13 @@ where
     {
         self.deref().label()
     }
-    
+
     fn init_view(&self, zoom: F, win_size: PhysicalSize<u32>) -> InitView<F>
     {
         self.deref().init_view(zoom, win_size)
     }
-    
-    fn setup_render_pipeline(
-        &self,
-        device: &wgpu::Device,
-        surface_format: wgpu::TextureFormat
-    ) -> wgpu::RenderPipeline
+
+    fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         self.deref().setup_render_pipeline(device, surface_format)
     }

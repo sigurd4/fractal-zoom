@@ -4,56 +4,45 @@ use winit::dpi::PhysicalSize;
 
 use crate::{f, MyFloat, app::InitView, fractal::{Fractal, dcdz}};
 
-use super::wgsl_bindgen::julia;
+use super::wgsl_bindgen::ikeda;
 
 #[derive(Clone, Copy)]
-pub struct Julia
+pub struct Ikeda
 {
-    c: Complex<f64>
+    a: f64,
+    b: f64,
+    k: f64,
+    p: f64
 }
 
-impl Julia
+impl Default for Ikeda
 {
-    pub fn dendrite() -> Self
+    fn default() -> Self
     {
         Self {
-            c: Complex { re: 0.0, im: -1.0 }
-        }
-    }
-    pub fn clover() -> Self
-    {
-        Self {
-            c: Complex { re: 1.0/4.0, im: 0.0 }
-        }
-    }
-    pub fn pearls() -> Self
-    {
-        Self {
-            c: Complex { re: -1.0, im: 0.0 }
-        }
-    }
-    pub fn douady_rabbit() -> Self
-    {
-        Self {
-            c: Complex { re: -0.122565, im: -0.744864 }
+            a: 1.0,
+            b: 0.9,
+            k: 0.4,
+            p: 6.0
         }
     }
 }
 
-impl<F> Fractal<F> for Julia
+impl<F> Fractal<F> for Ikeda
 where
     F: MyFloat
 {
     fn label(&self) -> &'static str
     {
-        "julia"
+        "ikeda"
     }
 
     fn init_view(&self, _zoom: F, _win_size: PhysicalSize<u32>) -> InitView<F>
     {
+        let Self { a, b, k, p } = *self;
         InitView {
-            shift: Complex::new(f!(self.c.re), f!(self.c.im)),
-            exp: Complex::new(f!(2.0), F::zero()),
+            shift: Complex::new(f!(a), f!(k)),
+            exp: Complex::new(f!(b), f!(p)),
             ..Default::default()
         }
     }
@@ -61,19 +50,19 @@ where
     fn setup_render_pipeline(&self, device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline
     {
         // Create shader module from generated code
-        let shader = julia::create_shader_module_embed_source(device);
+        let shader = ikeda::create_shader_module_embed_source(device);
         
         // Use generated pipeline layout
-        let pipeline_layout = julia::create_pipeline_layout(device);
+        let pipeline_layout = ikeda::create_pipeline_layout(device);
         
         // Use generated vertex entry with proper buffer layout
-        let vertex_entry = julia::vs_main_entry(wgpu::VertexStepMode::Vertex);
+        let vertex_entry = ikeda::vs_main_entry(wgpu::VertexStepMode::Vertex);
      
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some(Fractal::<F>::label(self)),
             layout: Some(&pipeline_layout),
-            vertex: julia::vertex_state(&shader, &vertex_entry),
-            fragment: Some(julia::fragment_state(&shader, &julia::fs_main_entry([
+            vertex: ikeda::vertex_state(&shader, &vertex_entry),
+            fragment: Some(ikeda::fragment_state(&shader, &ikeda::fs_main_entry([
                 Some(wgpu::ColorTargetState {
                     format: surface_format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),

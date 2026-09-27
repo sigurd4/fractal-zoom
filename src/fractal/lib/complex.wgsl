@@ -24,6 +24,14 @@ fn cdiv(lhs: vec2<f32>, rhs: vec2<f32>) -> vec2<f32>
     return mat2x2(lhs.x, lhs.y, lhs.y, -lhs.x)*rhs/norm_sqr(rhs);
 }
 
+fn ccos(x: vec2<f32>) -> vec2<f32>
+{
+    return vec2(
+        cos(x.x)*cosh(x.y),
+        -sin(x.x)*sinh(x.y)
+    );
+}
+
 fn norm_sqr(x: vec2<f32>) -> f32
 {
     return dot(x, x);

@@ -63,9 +63,9 @@ fn main() -> anyhow::Result<()>
 
     let fractals = (
         [
-            Arc::new(Feigenbaum::default()), // OK
+            Arc::new(Feigenbaum::default()), // Ok
             Arc::new(Cantor::cantor()), // OK
-            Arc::new(Cantor::cantor().sierpinski()), // OK
+            Arc::new(Cantor::cantor().sierpinski()), // Ok
             //Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0)), // Boring
             //Arc::new(Cantor::assymetric(1.0/4.0..1.0/2.0).sierpinski()), // Boring
             //Arc::new(Cantor::assymetric(1.0/8.0..7.0/8.0)), // Boring
@@ -75,21 +75,49 @@ fn main() -> anyhow::Result<()>
             //Arc::new(Cantor::smith_volterra()), // Broken
             //Arc::new(Cantor::smith_volterra().sierpinski()), // Broken
             // TODO: cantor triangle
-            Arc::new(Blancmange::default()), // TODO
-            /*Arc::new(SupergoldenJulia),
-            Arc::new(SupergoldenMandelbrot), // unknown hausdorf dim
-            Arc::new(Julia::clover()),
-            Arc::new(Rauzy::default()), // TODO
+            Arc::new(Blancmange::default()), // Ok
+            Arc::new(SupergoldenJulia), // Ok
+            Arc::new(SupergoldenMandelbrot), // Ok
+            Arc::new(Julia::clover()), // Perfect
+            Arc::new(Rauzy::default()), // Ok
             // TODO: gosper island
-            Arc::new(Julia::dendrite()),
-            Arc::new(FibonacciSnowlake), // TODO: fail
+            Arc::new(Julia::dendrite()), // Perfect
+            // TODO: fibonacci word
+            //Arc::new(FibonacciSnowflake), // TODO: fail
             // TODO: Boundary of the tame twindragon
-            Arc::new(Henon::default()),
-            // TODO: Koch snowflake
-            Arc::new(HeighwayDragon::default()), // TODO: fail
+            Arc::new(Henon::default()), // Perfect
+            // TODO: Koch snowflake (triflake)
+            // TODO: Koch snowflake (koch curve)
+            // TODO: Terdragon
+            // TODO: L-system
+            //Arc::new(HeighwayDragon::default()), // TODO: fail
+            Arc::new(Julia::pearls()), // Perfect
+            // TODO: Appolonian gasket
+            // TODO: Appolonian packing
+            // TODO: Minkowski Sausage a.k.a. Quadratic von Koch island
+            Arc::new(Julia::douady_rabbit()), // Perfect
+            // TODO: Viksec fractal
+            // TODO: Quadratic von Koch type 1
+            // TODO: Quadric cross
+            Arc::new(Weierstrass::default()), // Ok
+            // TODO: Quadratic von Koch type 2
+            // TODO: Dragon curve
+            // TODO: Twindragon
+            // TODO: 3-branches tree
+            // TODO: Sierpinski triangle
+            // TODO: Sierpinski arrowhead
+            // TODO: T-square fractal
+            // TODO: Golden dragon
+            // TODO: Pascal triangle modulo 3
+            // TODO: Sierpinski hexagon
+            // TODO: Fibonacci word fractal
+            // TODO: IFS
+            // TODO: Quadric fractal
+            // TODO: Pascal triangle modulo 5
+            Arc::new(Ikeda::default()) // Ok, but needs better parameterization
 
-            Arc::new(BurningShip), // OK
-            Arc::new(Cesaro::levyc()),
+            /*Arc::new(BurningShip), // Perfect
+            Arc::new(Cesaro::levyc()), // Perfect
             Arc::new(KochPeano::koch()),
             Arc::new(KochPeano::peano()),*/
         ] as [Arc<dyn Fractal<f64>>; _]

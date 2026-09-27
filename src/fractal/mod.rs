@@ -14,6 +14,7 @@ moddef::moddef!(
         fibonacci_hamiltonian_mandelbrot,
         julia,
         henon,
+        ikeda,
         koch_peano,
         mandelbrot,
         heighway_dragon,
@@ -21,7 +22,8 @@ moddef::moddef!(
         rauzy,
         supergolden_julia,
         supergolden_mandelbrot,
-        fibonacci_snowflake
+        fibonacci_snowflake,
+        weierstrass
     }
 );
 

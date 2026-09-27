@@ -15,7 +15,6 @@ moddef::moddef!(
         julia,
         henon,
         ikeda,
-        roessler,
         koch_peano,
         mandelbrot,
         heighway_dragon,

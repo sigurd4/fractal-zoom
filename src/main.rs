@@ -136,7 +136,7 @@ fn main() -> anyhow::Result<()>
         Arc::new(Julia::default()), // Perfect
         // TODO: Sierpinski curve
         // TODO: Hilbert curve
-        // TODO: Peano curve
+        Arc::new(KochPeano::peano()),
         // TODO: Moore curve
         // TODO: Lebesgue curve
         // TODO: Dragon curve
@@ -167,9 +167,8 @@ fn main() -> anyhow::Result<()>
         // TODO: 3D moore curve
         // TODO: 3D H-fractal
         // TODO: Mandelbulb (3D)
-        //Arc::new(KochPeano::peano())
-        //Arc::new(BurningShip), // Perfect
-        //Arc::new(HeighwayDragon::default()), // TODO: fail
+        Arc::new(BurningShip),               // Perfect
+        Arc::new(HeighwayDragon::default())  // TODO: fail
     ] as [Arc<dyn Fractal<f64>>; _])
         .into_iter()
         .rev()

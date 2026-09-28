@@ -18,18 +18,29 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
-    var c = z_in(position);
-    var z = shift_in();
-    let e = exp_in();
+    var z = z_in(position);
+    let c = shift_in();
+    let a = exp_in();
     let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
-    
-    var n = max_iterations();
+
+    let n = u32(max_iterations());
     var i: u32 = 0;
-    for(; i < u32(n) && norm_sqr(z) < r*4.0; i++)
+    for(; i < n && norm_sqr(z) < r*4.0; i++)
     {
-        z -= cmul(c - cmul(z, e), conj(e));
+        let z1 = cmul(z, a);
+        let z2 = c - cmul(z, conj(a));
+        let d1 = norm_sqr(z1);
+        let d2 = norm_sqr(z2);
+        if d2 < d1
+        {
+            z = z2;
+        }
+        else
+        {
+            z = z1;
+        }
     }
-    let m = f32(i) - f32(log(log(norm(z)))/log(norm(e)));
+    let m = f32(f32(i) - log(log(norm(z))));
     let zz = vec2(f32(z.x), f32(z.y));
 
     return colormap3(zz, m);

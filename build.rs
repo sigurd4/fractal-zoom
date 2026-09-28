@@ -27,6 +27,7 @@ fn main() -> miette::Result<()>
         .add_entry_point("src/fractal/supergolden_julia.wgsl")
         .add_entry_point("src/fractal/supergolden_mandelbrot.wgsl")
         .add_entry_point("src/fractal/weierstrass.wgsl")
+        .add_entry_point("src/fractal/minkowski_questionmark.wgsl")
         .serialization_strategy(WgslTypeSerializeStrategy::Bytemuck)
         .emit_rerun_if_change(true)
         //.shader_source_type(WgslShaderSourceType::ComposerWithRelativePath)

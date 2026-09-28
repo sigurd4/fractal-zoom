@@ -1,6 +1,7 @@
 #import global_bindings::{GlobalUniforms, VertexInput, z_in, shift_in, exp_in, globals, max_iterations, view_radius, epsilon};
 #import colormap::colormap3;
-#import complex::{cmul, cdiv, conj, cis, norm_sqr, norm, powc}
+#import complex::{cmul, cexp, cinv, cdiv, conj, cis, norm_sqr, norm, powc};
+#import consts::{ln_2, pi};
 
 @vertex
 fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
@@ -18,34 +19,30 @@ fn vs_main(in: VertexInput) -> @builtin(position) vec4<f32>
 @fragment
 fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
 {
-    var z = z_in(position);
-    let c = shift_in();
-    let a = exp_in();
-    let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
+    let x = z_in(position);
+    var z = x + vec2(0.5, 0.5);
+    var a = vec2(floor(z.x), floor(z.y));
+    var u = vec2(fract(z.x), fract(z.y));
+    z = cinv(u);
+    var y = a;
+    var t = shift_in();
+    let e = exp_in();
+    let r = max(1.0, norm_sqr(y));
     
     let n = u32(max_iterations());
     var i: u32 = 0;
-    for(; i < n && norm_sqr(z) < r*4.0; i++)
+    for(; i < n && norm_sqr(z) < 4.0*r; i++)
     {
-        let z1 = cdiv(z, c - z);
-        let z2 = cinv(z) - 2.0*c;
-        let d1 = norm_sqr(z1);
-        let d2 = norm_sqr(z2);
-        if d2 < d1 || d1 != d1
-        {
-            if d2 != d2
-            {
-                break;
-            }
-            z = z2;
-        }
-        else
-        {
-            z = z1;
-        }
-    }
-    let m = f32(f32(i) - log(log(norm(z)))/log(norm(a)));
-    let zz = vec2(f32(z.x), f32(z.y));
+        a = vec2(floor(z.x), floor(z.y));
+        u = vec2(fract(z.x), fract(z.y));
+        z = cinv(u);
 
-    return colormap3(zz, m);
+        t = cmul(-t, powc(e, -a));
+        y += t;
+    }
+
+    let m = f32(f32(i) - log(log(norm(y))));
+    let yy = vec2(f32(y.x), f32(y.y));
+
+    return colormap3(yy, m);
 }

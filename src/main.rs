@@ -62,8 +62,8 @@ const MOVE_SHIFT_ACCEL: f64 = 1.0;
 const ZOOM_RANGE: Range<f32> = START_ZOOM..f32::EPSILON.recip() * 100.0;
 const ZOOM_MUL: f64 = 0.1;
 const ZOOM_BASE: f64 = 1e4;
-const MAX_ITERATIONS: u32 = 32;
-const MIN_MAX_ITERATIONS: u32 = 32;
+const MAX_ITERATIONS: u32 = 16;
+const MIN_MAX_ITERATIONS: u32 = 16;
 const REFRESH_RATE: f64 = 30.0;
 
 const SHIFT_ZOOM_VARIANCE: f64 = 1.1;
@@ -167,8 +167,9 @@ fn main() -> anyhow::Result<()>
         // TODO: 3D moore curve
         // TODO: 3D H-fractal
         // TODO: Mandelbulb (3D)
-        Arc::new(BurningShip),               // Perfect
-        Arc::new(HeighwayDragon::default())  // TODO: fail
+        Arc::new(BurningShip), // Perfect
+        Arc::new(HeighwayDragon::default())  /* TODO: fail
+                                *Arc::new(MinkowskiQuestionmark) // TODO: Ok-ish, but colormap is saturating */
     ] as [Arc<dyn Fractal<f64>>; _])
         .into_iter()
         .rev()

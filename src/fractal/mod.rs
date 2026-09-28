@@ -23,7 +23,8 @@ moddef::moddef!(
         supergolden_julia,
         supergolden_mandelbrot,
         fibonacci_snowflake,
-        weierstrass
+        weierstrass,
+        minkowski_questionmark
     }
 );
 

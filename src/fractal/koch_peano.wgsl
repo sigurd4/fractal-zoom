@@ -22,7 +22,7 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
     let c = shift_in();
     let a = exp_in();
     let r = max(max(1.0, norm_sqr(z)), norm_sqr(c));
-    
+
     let n = u32(max_iterations());
     var i: u32 = 0;
     for(; i < n && norm_sqr(z) < r*4.0; i++)
@@ -31,12 +31,8 @@ fn fs_main(@builtin(position) position: vec4<f32>) -> @location(0) vec4<f32>
         let z2 = conj(cdiv(z - a, c - a));
         let d1 = norm_sqr(z1);
         let d2 = norm_sqr(z2);
-        if d2 < d1 || d1 != d1
+        if d2 < d1
         {
-            if d2 != d2
-            {
-                break;
-            }
             z = z2;
         }
         else
